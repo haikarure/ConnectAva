@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ConnectAva · Vercel Deploy</title>
+<style>
+  :root {
+    --ground: hsl(222 47% 6%);
+    --panel: hsl(222 40% 11%);
+    --panel-2: hsl(222 38% 14%);
+    --hair: hsl(45 90% 60% / 0.18);
+    --gold: hsl(45 90% 60%);
+    --gold-soft: hsl(40 55% 85%);
+    --body: hsl(220 15% 72%);
+    --muted: hsl(220 12% 52%);
+    --ok: hsl(150 60% 52%);
+    --warn: hsl(38 95% 62%);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--body);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ambient glow */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background: radial-gradient(70% 50% at 80% -10%, hsl(45 90% 50% / 0.10), transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 1040px; margin: 0 auto; padding: 56px 24px 96px;
+    display: grid; grid-template-columns: 210px 1fr; gap: 48px;
+  }
+
+  /* ---- header ---- */
+  header { grid-column: 1 / -1; border-bottom: 1px solid var(--hair); padding-bottom: 28px; margin-bottom: 8px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--gold); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 700; color: var(--gold-soft);
+    font-size: clamp(34px, 6vw, 54px); line-height: 1.05; margin: 0;
+    text-wrap: balance;
+  }
+  .sub { margin: 16px 0 0; max-width: 60ch; color: var(--body); }
+
+  /* ---- step rail ---- */
+  nav.rail { position: sticky; top: 32px; align-self: start; height: max-content; }
+  nav.rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  nav.rail a {
+    display: flex; gap: 12px; align-items: baseline;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+    padding: 8px 10px; border-radius: 8px; text-decoration: none;
+    border-left: 2px solid transparent; transition: all .15s;
+  }
+  nav.rail a:hover { color: var(--gold-soft); background: var(--panel); }
+  nav.rail a .n { color: var(--gold); font-weight: 700; min-width: 18px; }
+  nav.rail a:hover .n { color: var(--gold); }
+
+  /* ---- content ---- */
+  main { min-width: 0; }
+  section { scroll-margin-top: 24px; padding: 30px 0; border-bottom: 1px solid hsl(222 30% 18% / 0.6); }
+  section:last-child { border-bottom: none; }
+  h2 {
+    font-family: var(--serif); color: var(--gold-soft); font-weight: 700;
+    font-size: 26px; margin: 0 0 6px; text-wrap: balance;
+  }
+  h2 .step { font-family: var(--mono); font-size: 13px; color: var(--gold); display: block; letter-spacing: .2em; margin-bottom: 6px; }
+  h3 { color: var(--gold-soft); font-size: 16px; margin: 24px 0 8px; font-weight: 600; }
+  p { margin: 10px 0; }
+  ul, ol.body { margin: 10px 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  strong { color: var(--gold-soft); font-weight: 600; }
+
+  code {
+    font-family: var(--mono); font-size: 13.5px;
+    background: var(--panel-2); color: var(--gold-soft);
+    padding: 1.5px 6px; border-radius: 5px; border: 1px solid hsl(222 30% 22%);
+  }
+  pre {
+    background: var(--panel); border: 1px solid hsl(222 30% 20%);
+    border-radius: 12px; padding: 16px 18px; overflow-x: auto;
+    margin: 14px 0; font-family: var(--mono); font-size: 13px; line-height: 1.6;
+    color: var(--body);
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  /* env callout */
+  .callout {
+    border: 1px solid var(--warn); border-left-width: 4px;
+    background: hsl(38 60% 50% / 0.08); border-radius: 12px;
+    padding: 16px 18px; margin: 18px 0;
+  }
+  .callout .tag {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--warn); display: block; margin-bottom: 8px;
+  }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid hsl(222 30% 18%); }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  td:first-child, th:first-child { font-family: var(--mono); color: var(--gold-soft); font-variant-numeric: tabular-nums; }
+  .ok { color: var(--ok); font-weight: 600; }
+
+  /* checklist */
+  .checks { list-style: none; padding-left: 0; }
+  .checks li { padding-left: 28px; position: relative; }
+  .checks li::before {
+    content: "✓"; position: absolute; left: 0; top: 0;
+    color: var(--ok); font-weight: 700; font-family: var(--mono);
+  }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono);
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: hsl(150 60% 50% / 0.12); color: var(--ok); border: 1px solid hsl(150 60% 50% / 0.3);
+  }
+
+  footer { grid-column: 1 / -1; margin-top: 40px; color: var(--muted); font-size: 13px; }
+  footer code { font-size: 12px; }
+
+  @media (max-width: 760px) {
+    .wrap { grid-template-columns: 1fr; gap: 0; }
+    nav.rail { position: static; margin-bottom: 24px; }
+    nav.rail ol { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+    nav.rail a { border-left: none; border: 1px solid hsl(222 30% 20%); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">ConnectAva · White Rock Bali</p>
+    <h1>Deploy ke Vercel</h1>
+    <p class="sub">Dari repo private sampai live — termasuk satu hal yang bikin AI Voice "Sarah" jalan: environment variable LiveKit. Repo sudah di-push; sisa tinggal connect ke Vercel.</p>
+  </header>
+
+  <nav class="rail" aria-label="Steps">
+    <ol>
+      <li><a href="#s1"><span class="n">01</span> Status repo</a></li>
+      <li><a href="#s2"><span class="n">02</span> Import ke Vercel</a></li>
+      <li><a href="#s3"><span class="n">03</span> Env variable</a></li>
+      <li><a href="#s4"><span class="n">04</span> Deploy & cek</a></li>
+      <li><a href="#s5"><span class="n">05</span> Domain</a></li>
+      <li><a href="#s6"><span class="n">06</span> Re-deploy</a></li>
+      <li><a href="#s7"><span class="n">07</span> Troubleshoot</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="s1">
+      <h2><span class="step">Step 01</span>Status repo sekarang</h2>
+      <p>Sudah kelar — lu gak perlu push lagi untuk pertama kali.</p>
+      <ul class="body">
+        <li>Repo <strong>private</strong> <code>connectouch-official/ConnectAva</code> sudah dibuat atas nama <code>haikarure</code>.</li>
+        <li>Source <code>website/</code> (React + Vite) sudah di <code>main</code> — <strong>139 file</strong>.</li>
+        <li><code>.env</code> <strong>tidak</strong> ikut (aman). <code>node_modules</code> &amp; <code>dist</code> di-ignore.</li>
+      </ul>
+      <p><span class="pill">✓ Ready to import</span></p>
+    </section>
+
+    <section id="s2">
+      <h2><span class="step">Step 02</span>Import ke Vercel</h2>
+      <ol class="body">
+        <li>Buka <a href="https://vercel.com" target="_blank" rel="noreferrer">vercel.com</a> → login pakai GitHub (<code>haikarure</code>).</li>
+        <li><strong>Add New → Project</strong>.</li>
+        <li>Cari <code>connectouch-official / ConnectAva</code> → <strong>Import</strong>.
+          <br /><span style="color:var(--muted);font-size:14px">Kalau gak muncul: klik <em>Configure GitHub App</em> → authorize org <code>connectouch-official</code>.</span></li>
+        <li>Biarkan Vercel auto-detect <strong>Vite</strong>. Cek setting:</li>
+      </ol>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td>Framework</td><td>Vite</td></tr>
+        <tr><td>Root Directory</td><td><code>/</code> (default)</td></tr>
+        <tr><td>Build Command</td><td><code>npm run build</code></td></tr>
+        <tr><td>Output Directory</td><td><code>dist</code></td></tr>
+        <tr><td>Install Command</td><td><code>npm install</code></td></tr>
+      </table>
+      <p style="color:var(--muted);font-size:14px">Vercel pakai <strong>npm</strong> (bukan bun). <code>package-lock.json</code> sudah ada di repo → install aman. Gak perlu <code>vercel.json</code>; Vite auto-detect SPA.</p>
+    </section>
+
+    <section id="s3">
+      <h2><span class="step">Step 03</span>Environment variable (penting)</h2>
+      <p>Tanpa ini, tombol AI Voice "Sarah" di pojok kanan bawah <strong>gak akan connect</strong> ke LiveKit. Isinya cuma URL publik (bukan secret), tapi sengaja gak di-push ke repo.</p>
+      <div class="callout">
+        <span class="tag">Wajib diisi</span>
+        Di dashboard Vercel → project → <strong>Settings → Environment Variables</strong>, tambah:
+        <table style="margin-top:12px">
+          <tr><th>Name</th><th>Value</th><th>Environments</th></tr>
+          <tr><td>VITE_LIVEKIT_URL</td><td><code>wss://receptionist-lwypqvqa.livekit.cloud</code></td><td>Production, Preview, Development</td></tr>
+        </table>
+        <p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Kalau URL LiveKit lu berubah nanti, update di sini. Nilai ini diambil dari <code>.env</code> lokal.</p>
+      </div>
+    </section>
+
+    <section id="s4">
+      <h2><span class="step">Step 04</span>Deploy &amp; cek</h2>
+      <ol class="body">
+        <li>Klik <strong>Deploy</strong>. Tunggu ~1–2 menit → status <span class="ok">Ready</span>.</li>
+        <li>Klik URL <code>*.vercel.app</code> dan pastiin:</li>
+      </ol>
+      <ul class="checks">
+        <li>Hero video muter mulus (<code>bg-2m.webm</code> / <code>bg-2m.mp4</code>)</li>
+        <li>Navbar gak ada "kotak putih" pas scroll up/down</li>
+        <li>Switcher bahasa (hover EN → ID/RU/KO) jalan; currency ngikut otomatis (USD / RUB / KRW / IDR)</li>
+        <li>16 route kebuka: <code>/</code>, <code>/daybeds-suites</code>, <code>/dining</code>, <code>/experiences</code>, <code>/spa-wellness</code>, <code>/fitness-center</code>, <code>/weddings-mice</code>, <code>/events</code>, <code>/merch</code>, <code>/live-weather</code>, <code>/contact</code>, <code>/nye</code>, <code>/faq</code>, <code>/careers</code>, <code>/booking</code>, <code>/valet-parking</code></li>
+        <li>AI Voice "Sarah" (pojok kanan bawah) bisa dibuka &amp; connect</li>
+      </ul>
+    </section>
+
+    <section id="s5">
+      <h2><span class="step">Step 05</span>Custom domain (opsional)</h2>
+      <ol class="body">
+        <li>Dashboard Vercel → project → <strong>Settings → Domains</strong>.</li>
+        <li>Add domain (mis. <code>connectava.id</code>).</li>
+        <li>Ikuti instruksi DNS (CNAME / A record di registrar lu).</li>
+        <li>SSL otomatis (Let's Encrypt) dari Vercel.</li>
+      </ol>
+    </section>
+
+    <section id="s6">
+      <h2><span class="step">Step 06</span>Update &amp; re-deploy</h2>
+      <p>Setiap push ke <code>main</code> → Vercel <strong>auto re-deploy</strong>. Untuk push update, copy <code>website/</code> ke folder git terpisah (parent repo <code>ai-avatar-yt</code> gak diutak), lalu:</p>
+      <pre><code>git add -A
+git commit -m "update: ..."
+git push origin main</code></pre>
+      <p style="color:var(--muted);font-size:14px">Saran ke depan: pisahin <code>website/</code> jadi git repo sendiri biar <code>git push</code> langsung dari situ tanpa copy manual.</p>
+    </section>
+
+    <section id="s7">
+      <h2><span class="step">Step 07</span>Troubleshooting</h2>
+      <table>
+        <tr><th>Gejala</th><th>Penyebab</th><th>Solusi</th></tr>
+        <tr><td>Build gagal / module not found</td><td>lockfile gak kebaca</td><td>Pastiin <code>package-lock.json</code> ter-commit (sudah ada)</td></tr>
+        <tr><td>AI voice gak connect</td><td><code>VITE_LIVEKIT_URL</code> kosong</td><td>Isi Env Var (Step 03)</td></tr>
+        <tr><td>Video gak muncul</td><td>path asset salah</td><td>Cek <code>public/assets/whiterock/bg-2m.*</code> ter-commit (sudah)</td></tr>
+        <tr><td>Bahasa/currency gak berubah</td><td>i18n context</td><td>Pastiin <code>&lt;LangProvider&gt;</code> wrap <code>&lt;App&gt;</code></td></tr>
+        <tr><td>Deploy sukses tapi blank</td><td>SPA route 404</td><td>Vite auto-handle; kalau manual, add <code>vercel.json</code> rewrite → <code>index.html</code></td></tr>
+      </table>
+    </section>
+
+  </main>
+
+  <footer>
+    Repo: <code>github.com/connectouch-official/ConnectAva</code> · Backend LiveKit (Python) tidak di-deploy Vercel — butuh server terpisah; frontend cuma butuh <code>VITE_LIVEKIT_URL</code>.
+  </footer>
+
+</div>
+</body>
+</html>
