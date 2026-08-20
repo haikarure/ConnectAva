@@ -92,6 +92,9 @@ export default function DaybedsSuites() {
                     ko: "데이베드 예약마다 웰컴 음료와 프리미엄 타월을 받으세요. 단체 할인은 Sarah에게 문의하세요.",
                   })}
                 </p>
+                <p className="text-xs text-amber-400/80 mt-2 font-mono">
+                  ⛓️ {tf({ id: "Pembayaran via Monad Testnet escrow smart contract", en: "Payment via Monad Testnet escrow smart contract", ru: "Оплата через смарт-контракт Monad Testnet escrow", ko: "Monad 테스트넷 에스크로 스마트 컨트랙트를 통한 결제" })}
+                </p>
               </div>
               <Button variant="luxury" size="lg" onClick={() => navigate("/booking")}>
                 {tf({ id: "Cek Ketersediaan", en: "Check Availability", ru: "Проверить наличие", ko: "예약 가능 확인" })}

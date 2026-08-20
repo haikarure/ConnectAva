@@ -29,6 +29,8 @@ import FitnessCenter from "./pages/FitnessCenter";
 import ValetParking from "./pages/ValetParking";
 import Booking from "./pages/Booking";
 import BookingConfirmation from "./pages/BookingConfirmation";
+import MyBookings from "./pages/MyBookings";
+import StaffCheckIn from "./pages/StaffCheckIn";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +106,8 @@ const GlobalLayout = () => {
           <Route path="/valet-parking" element={<ValetParking />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/bookingconfirmation" element={<BookingConfirmation />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/staff-checkin" element={<StaffCheckIn />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

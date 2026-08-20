@@ -21,6 +21,8 @@ const COLS = [
       { label: { id: "Experiences", en: "Experiences", ru: "Впечатления", ko: "체험" }, to: "/experiences" },
       { label: { id: "Events", en: "Events", ru: "События", ko: "이벤트" }, to: "/events" },
       { label: { id: "Reservasi", en: "Book a Daybed", ru: "Забронировать шезлонг", ko: "데이베드 예약" }, to: "/booking" },
+      { label: { id: "Reservasi Saya", en: "My Bookings", ru: "Мои бронирования", ko: "내 예약" }, to: "/my-bookings" },
+      { label: { id: "Staff Check-In", en: "Staff Check-In", ru: "Регистрация staff", ko: "스태프 체크인" }, to: "/staff-checkin" },
     ],
   },
   {

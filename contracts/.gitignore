@@ -1,0 +1,12 @@
+# Compiler files
+out/
+cache/
+
+# Broadcast files (contain private keys)
+broadcast/
+
+# Dependencies
+lib/
+
+# Dotenv file
+.env

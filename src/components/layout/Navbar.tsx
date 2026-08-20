@@ -17,6 +17,8 @@ import {
   Waves,
   CalendarHeart,
   CloudSun,
+  ListChecks,
+  QrCode,
 } from "lucide-react";
 
 const NAV: {
@@ -31,6 +33,7 @@ const NAV: {
       { label: { id: "Semua Daybed", en: "All Daybeds", ru: "Все шезлонги", ko: "모든 데이베드" }, to: "/daybeds-suites", icon: Bed },
       { label: { id: "VIP Cabana", en: "VIP Cabana", ru: "VIP кабана", ko: "VIP 카바나" }, to: "/daybeds-suites#vip", icon: Sparkles },
       { label: { id: "Reservasi", en: "Reserve", ru: "Забронировать", ko: "예약" }, to: "/booking", icon: CalendarHeart },
+      { label: { id: "Reservasi Saya", en: "My Bookings", ru: "Мои бронирования", ko: "내 예약" }, to: "/my-bookings", icon: ListChecks },
     ],
   },
   {
@@ -75,6 +78,7 @@ const NAV: {
       { label: { id: "Kontak", en: "Contact", ru: "Контакты", ko: "연락처" }, to: "/contact", icon: MessageCircle },
       { label: { id: "FAQ", en: "FAQ", ru: "Часто задаваемые вопросы", ko: "자주 묻는 질문" }, to: "/faq", icon: Globe },
       { label: { id: "Karir", en: "Careers", ru: "Карьера", ko: "채용" }, to: "/careers", icon: Sparkles },
+      { label: { id: "Staff Check-In", en: "Staff Check-In", ru: "Регистрация staff", ko: "스태프 체크인" }, to: "/staff-checkin", icon: QrCode },
     ],
   },
 ];
