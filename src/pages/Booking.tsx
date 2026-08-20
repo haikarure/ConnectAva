@@ -1,7 +1,7 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, Check, Loader2, Droplets } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
@@ -10,9 +10,28 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Web3BookingButton } from "@/components/web3/Web3BookingButton";
 import { MintPassButton } from "@/components/web3/MintPassButton";
 import { NFTPassCard } from "@/components/web3/NFTPassCard";
-import { DAYBED_TYPES } from "@/web3/contracts";
-import { useAccount } from "wagmi";
+import { DAYBED_TYPES, CONTRACT_ADDRESSES } from "@/web3/contracts";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { useMonPrice } from "@/hooks/useMonPrice";
+import { formatUnits } from "viem";
+
+// MockUSDT ABI (faucet + balanceOf)
+const MOCK_USDT_ABI = [
+  {
+    inputs: [],
+    name: "faucet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ name: "account", type: "address" }],
+    name: "balanceOf",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 const DAYBED_DATA = [
   { type: 0, capacity: "4 pax", usdt: 30 },
@@ -27,10 +46,34 @@ const Booking = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedDaybed, setSelectedDaybed] = useState<number | null>(null);
   const [bookingComplete, setBookingComplete] = useState(false);
-  const { isConnected } = useAccount();
-  const { monPriceUsd, loading: priceLoading, usdtToMon } = useMonPrice();
+  const { address, isConnected } = useAccount();
+  const { monPriceUsd, usdtToMon } = useMonPrice();
+  const { writeContractAsync, isPending: isFauceting } = useWriteContract();
+
+  // Read USDT balance
+  const { data: usdtBalance, refetch: refetchBalance } = useReadContract({
+    address: CONTRACT_ADDRESSES.mockUSDT,
+    abi: MOCK_USDT_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
 
   const dateStr = date ? date.toISOString().split("T")[0] : "";
+  const balanceFormatted = usdtBalance ? formatUnits(usdtBalance, 6) : "0";
+
+  const handleFaucet = async () => {
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.mockUSDT,
+        abi: MOCK_USDT_ABI,
+        functionName: "faucet",
+      });
+      refetchBalance();
+    } catch (err) {
+      console.error("Faucet failed:", err);
+    }
+  };
 
   return (
     <div>
@@ -38,21 +81,45 @@ const Booking = () => {
         eyebrow={{ id: "Reservasi", en: "Reservation", ru: "Бронирование", ko: "예약" }}
         title={{ id: "Reserve VIP Daybed", en: "Reserve VIP Daybed", ru: "Забронировать VIP Daybed", ko: "VIP 데이베드 예약" }}
         subtitle={{
-          id: "Pilih tanggal dan tipe daybed, lalu deposit escrow di Monad Testnet.",
-          en: "Select your date and daybed type, then deposit escrow on Monad Testnet.",
-          ru: "Выберите дату и тип daybed, затем внесите депозит в Monad Testnet.",
-          ko: "날짜와 데이베드 유형을 선택한 다음 Monad 테스트넷에 에스크로를 입금하세요.",
+          id: "Bayar dengan Mock USDT (gratis dari faucet). Dana di-amankan di smart contract Monad.",
+          en: "Pay with Mock USDT (free from faucet). Funds secured in Monad smart contract.",
+          ru: "Оплатите Mock USDT (бесплатно из faucet). Средства защищены смарт-контрактом Monad.",
+          ko: "Mock USDT로 결제 (faucet에서 무료). Monad 스마트 컨트랙트에 자금 보관.",
         }}
       />
 
       <section className="py-16 px-5 md:px-8">
         <div className="container mx-auto max-w-4xl">
-          {/* Live MON Price Banner */}
-          {monPriceUsd && (
+          {/* USDT Faucet Banner */}
+          {isConnected && (
             <Reveal>
-              <div className="mb-6 p-3 rounded-xl bg-amber-300/10 border border-amber-300/20 text-center">
-                <span className="text-xs text-slate-400">Live MON Price (CoinGecko): </span>
-                <span className="text-amber-300 font-bold">${monPriceUsd.toFixed(4)} USD</span>
+              <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-amber-500/10 border border-emerald-500/20">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <Droplets className="h-6 w-6 text-emerald-400" />
+                    <div>
+                      <p className="text-white font-semibold">Mock USDT Faucet</p>
+                      <p className="text-xs text-slate-400">Klaim 1,000 USDT gratis (1x per jam)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-400">Balance: <span className="text-emerald-400 font-bold">{balanceFormatted} USDT</span></span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isFauceting}
+                      onClick={handleFaucet}
+                      className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                    >
+                      {isFauceting ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Droplets className="h-4 w-4 mr-1" />
+                      )}
+                      {tf({ id: "Klaim USDT", en: "Claim USDT", ru: "Получить USDT", ko: "USDT 받기" })}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </Reveal>
           )}
@@ -113,14 +180,10 @@ const Booking = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-amber-300 font-bold text-sm">
-                            {priceLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin inline" />
-                            ) : (
-                              `${usdtToMon(DAYBED_DATA[i].usdt)} MON`
-                            )}
+                          <div className="text-amber-300 font-bold text-sm">{daybed.minSpendUsdt}</div>
+                          <div className="text-xs text-slate-500">
+                            ~{usdtToMon(DAYBED_DATA[i].usdt)} MON
                           </div>
-                          <div className="text-xs text-slate-500">/ {daybed.minSpendUsdt}</div>
                         </div>
                       </button>
                     ))}
@@ -150,10 +213,10 @@ const Booking = () => {
                     </CardTitle>
                     <p className="text-center text-slate-400 text-sm">
                       {tf({
-                        id: "Dana kamu di-amankan di smart contract Monad. Refund 100% jika batal 24 jam sebelum kunjungan.",
-                        en: "Your funds are secured in a Monad smart contract. 100% refund if cancelled 24h before visit.",
-                        ru: "Ваши средства защищены смарт-контрактом Monad. 100% возврат при отмене за 24 часа до визита.",
-                        ko: "자금은 Monad 스마트 컨트랙트에 안전하게 보관됩니다. 방문 24시간 전 취소 시 100% 환불.",
+                        id: "Bayar pakai Mock USDT. Dana di-amankan di smart contract. Refund 100% jika batal 24 jam sebelumnya.",
+                        en: "Pay with Mock USDT. Funds secured in smart contract. 100% refund if cancelled 24h before.",
+                        ru: "Оплатите Mock USDT. Средства защищены в смарт-контракте. 100% возврат при отмене за 24ч.",
+                        ko: "Mock USDT로 결제. 스마트 컨트랙트에 자금 보관. 24시간 전 취소 시 100% 환불.",
                       })}
                     </p>
                   </CardHeader>
