@@ -10,3 +10,6 @@ lib/
 
 # Dotenv file
 .env
+
+# Certora internal
+certora_internal/
