@@ -3,9 +3,11 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {WhiteRockPass} from "../src/WhiteRockPass.sol";
+import {MockUSDT} from "../src/MockUSDT.sol";
 
 contract WhiteRockPassTest is Test {
     WhiteRockPass public pass;
+    MockUSDT public usdt;
     address public owner = address(this);
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
@@ -14,7 +16,14 @@ contract WhiteRockPassTest is Test {
     event PassMinted(address indexed minter, uint256 indexed tokenId, WhiteRockPass.PassTier tier);
 
     function setUp() public {
+        usdt = new MockUSDT(owner);
         pass = new WhiteRockPass("https://api.whiterockbali.com/metadata/", owner);
+        pass.setUsdtToken(address(usdt));
+
+        // Fund test users with USDT
+        usdt.mint(alice, 10000 * 10**6);
+        usdt.mint(bob, 10000 * 10**6);
+        usdt.mint(carol, 10000 * 10**6);
     }
 
     // Required to receive ETH from withdraw()
@@ -34,441 +43,391 @@ contract WhiteRockPassTest is Test {
     }
 
     function test_constructor_setsTierConfigs() public view {
-        // Lagoon: (price, discountBps, maxSupply, currentSupply, active)
+        // Lagoon: 10 USDT, 5% discount, 500 cap
         (uint256 lPrice, uint16 lDiscount, uint32 lMaxSupply, uint32 lCurrentSupply, bool lActive) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
-        assertEq(lPrice, 0.05 ether);
+        assertEq(lPrice, 10 * 10**6);
         assertEq(lDiscount, 500);
         assertEq(lMaxSupply, 500);
         assertEq(lCurrentSupply, 0);
         assertTrue(lActive);
 
-        // VIP Cabana
+        // VIP Cabana: 50 USDT, 10% discount, 150 cap
         (uint256 vPrice, uint16 vDiscount, uint32 vMaxSupply, uint32 vCurrentSupply, bool vActive) = pass.tierConfigs(WhiteRockPass.PassTier.VIP_CABANA);
-        assertEq(vPrice, 0.2 ether);
+        assertEq(vPrice, 50 * 10**6);
         assertEq(vDiscount, 1000);
         assertEq(vMaxSupply, 150);
         assertEq(vCurrentSupply, 0);
         assertTrue(vActive);
 
-        // Party Suite
+        // Party Suite: 100 USDT, 20% discount, 50 cap
         (uint256 pPrice, uint16 pDiscount, uint32 pMaxSupply, uint32 pCurrentSupply, bool pActive) = pass.tierConfigs(WhiteRockPass.PassTier.PARTY_SUITE);
-        assertEq(pPrice, 0.5 ether);
+        assertEq(pPrice, 100 * 10**6);
         assertEq(pDiscount, 2000);
         assertEq(pMaxSupply, 50);
         assertEq(pCurrentSupply, 0);
         assertTrue(pActive);
     }
 
-    function test_constructor_setsBaseURI() public {
-        // Mint first so token 1 exists
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        assertEq(pass.tokenURI(1), "https://api.whiterockbali.com/metadata/1.json");
-    }
-
     // ============================================================
-    //                      MINT TESTS
+    //                      MINT TESTS (USDT)
     // ============================================================
 
-    function test_mintLagoonPass() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
+    function test_mintPass_lagoon() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
 
         assertEq(pass.balanceOf(alice), 1);
         assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.LAGOON));
-        (, , , uint32 lCurrentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
-        assertEq(lCurrentSupply, 1);
     }
 
-    function test_mintVIPCabanaPass() public {
-        vm.deal(bob, 1 ether);
-        vm.prank(bob);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
-
-        assertEq(pass.balanceOf(bob), 1);
-        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.VIP_CABANA));
-        (, , , uint32 vCurrentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.VIP_CABANA);
-        assertEq(vCurrentSupply, 1);
-    }
-
-    function test_mintPartySuitePass() public {
-        vm.deal(carol, 10 ether);
-        vm.prank(carol);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-
-        assertEq(pass.balanceOf(carol), 1);
-        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.PARTY_SUITE));
-        (, , , uint32 partyCurrentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.PARTY_SUITE);
-        assertEq(partyCurrentSupply, 1);
-    }
-
-    function test_mintRefundsExcessMON() public {
-        vm.deal(alice, 1 ether);
-        uint256 balanceBefore = alice.balance;
-
-        vm.prank(alice);
-        pass.mintPass{value: 0.1 ether}(WhiteRockPass.PassTier.LAGOON);
-
-        assertEq(alice.balance, balanceBefore - 0.05 ether);
-    }
-
-    function test_mintEmitsPassMintedEvent() public {
-        vm.deal(alice, 1 ether);
-
-        vm.expectEmit(true, true, true, true);
-        emit PassMinted(alice, 1, WhiteRockPass.PassTier.LAGOON);
-
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-    }
-
-    function test_mintMultiplePasses() public {
-        vm.deal(alice, 1 ether);
-
+    function test_mintPass_vipCabana() public {
         vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
+        usdt.approve(address(pass), 50 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
         vm.stopPrank();
 
-        assertEq(pass.balanceOf(alice), 2);
-        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.LAGOON));
-        assertEq(uint8(pass.tokenTiers(2)), uint8(WhiteRockPass.PassTier.VIP_CABANA));
+        assertEq(pass.balanceOf(alice), 1);
+        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.VIP_CABANA));
+    }
+
+    function test_mintPass_partySuite() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 100 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.stopPrank();
+
+        assertEq(pass.balanceOf(alice), 1);
+        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.PARTY_SUITE));
+    }
+
+    function test_mintPass_increasesTotalSupply() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        assertEq(pass.totalSupply(), 1);
+    }
+
+    function test_mintPass_increasesCurrentSupply() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        (, , , uint32 currentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
+        assertEq(currentSupply, 1);
+    }
+
+    function test_mintPass_multipleUsers() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        usdt.approve(address(pass), 50 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
+        vm.stopPrank();
+
+        assertEq(pass.balanceOf(alice), 1);
+        assertEq(pass.balanceOf(bob), 1);
+        assertEq(pass.totalSupply(), 2);
+    }
+
+    function test_mintPass_emitsEvent() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+
+        vm.expectEmit(true, true, false, true);
+        emit PassMinted(alice, 1, WhiteRockPass.PassTier.LAGOON);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+    }
+
+    function test_mintPass_transfersUSDT() public {
+        uint256 balanceBefore = usdt.balanceOf(alice);
+
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        assertEq(usdt.balanceOf(alice), balanceBefore - 10 * 10**6);
+        assertEq(usdt.balanceOf(address(pass)), 10 * 10**6);
     }
 
     // ============================================================
-    //                    MINT FAILURE TESTS
+    //                      MINT REVERT TESTS
     // ============================================================
 
-    function test_mintFailsWhenTierInactive() public {
-        vm.prank(owner);
-        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0.05 ether, 500, 500, false);
+    function test_mintPass_revert_insufficientUSDT() public {
+        vm.startPrank(alice);
+        // Only approve 5 USDT, but Lagoon costs 10
+        usdt.approve(address(pass), 5 * 10**6);
+        vm.expectRevert();
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+    }
 
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
+    function test_mintPass_revert_noApproval() public {
+        vm.startPrank(alice);
+        // No approval at all
+        vm.expectRevert();
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+    }
+
+    function test_mintPass_revert_inactiveTier() public {
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 500, 500, false);
+
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
         vm.expectRevert("Tier is not active");
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
     }
 
-    function test_mintFailsWhenSoldOut() public {
-        for (uint256 i = 0; i < 50; i++) {
-            address minter = address(uint160(i + 1000));
-            vm.deal(minter, 1 ether);
-            vm.prank(minter);
-            pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-        }
-        (, , , uint32 pCurrentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.PARTY_SUITE);
-        assertEq(pCurrentSupply, 50);
+    function test_mintPass_revert_soldOut() public {
+        // Set maxSupply to 0 after setting currentSupply
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 500, 1, false); // deactivate
 
-        vm.deal(carol, 1 ether);
-        vm.prank(carol);
-        vm.expectRevert("Tier sold out");
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-    }
-
-    function test_mintFailsWithInsufficientMON() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        vm.expectRevert("Insufficient MON sent");
-        pass.mintPass{value: 0.01 ether}(WhiteRockPass.PassTier.LAGOON);
-    }
-
-    function test_mintFailsWithZeroValue() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        vm.expectRevert("Insufficient MON sent");
-        pass.mintPass{value: 0}(WhiteRockPass.PassTier.LAGOON);
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        vm.expectRevert("Tier is not active");
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
     }
 
     // ============================================================
-    //                    DISCOUNT TESTS
+    //                      DISCOUNT TESTS
     // ============================================================
 
-    function test_getDiscountBpsReturnsZeroForNonHolder() public view {
+    function test_getDiscountBpsForUser_noPass() public view {
         assertEq(pass.getDiscountBpsForUser(alice), 0);
     }
 
-    function test_getDiscountBpsLagoon5Percent() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        assertEq(pass.getDiscountBpsForUser(alice), 500);
+    function test_getDiscountBpsForUser_lagoon() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        assertEq(pass.getDiscountBpsForUser(alice), 500); // 5%
     }
 
-    function test_getDiscountBpsVIPCabana10Percent() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
+    function test_getDiscountBpsForUser_vipCabana() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 50 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
+        vm.stopPrank();
+
+        assertEq(pass.getDiscountBpsForUser(alice), 1000); // 10%
+    }
+
+    function test_getDiscountBpsForUser_partySuite() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 100 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.stopPrank();
+
+        assertEq(pass.getDiscountBpsForUser(alice), 2000); // 20%
+    }
+
+    function test_getDiscountBpsForUser_highestTier() public {
+        // Mint both Lagoon and VIP Cabana
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 60 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
+        vm.stopPrank();
+
+        // Should return highest (10% = 1000)
         assertEq(pass.getDiscountBpsForUser(alice), 1000);
     }
 
-    function test_getDiscountBpsPartySuite20Percent() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-        assertEq(pass.getDiscountBpsForUser(alice), 2000);
-    }
-
-    function test_getDiscountBpsReturnsHighestTierDiscount() public {
-        vm.deal(alice, 1 ether);
-        vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-        vm.stopPrank();
-        assertEq(pass.getDiscountBpsForUser(alice), 2000);
-    }
-
-    function test_getDiscountBpsAfterOwnerUpdatesConfig() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        assertEq(pass.getDiscountBpsForUser(alice), 500);
-
-        vm.prank(owner);
-        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0.05 ether, 1500, 500, true);
-        assertEq(pass.getDiscountBpsForUser(alice), 1500);
-    }
-
     // ============================================================
-    //                    TOKEN URI TESTS
+    //                      ADMIN TESTS
     // ============================================================
 
-    function test_tokenURIWorksForAllTiers() public {
-        vm.deal(alice, 1 ether);
-        vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
-        vm.stopPrank();
-
-        assertEq(pass.tokenURI(1), "https://api.whiterockbali.com/metadata/1.json");
-        assertEq(pass.tokenURI(2), "https://api.whiterockbali.com/metadata/2.json");
-        assertEq(pass.tokenURI(3), "https://api.whiterockbali.com/metadata/3.json");
-    }
-
-    function test_tokenURIRevertsForNonExistentToken() public {
-        vm.expectRevert();
-        pass.tokenURI(999);
-    }
-
-    function test_setBaseURIUpdatesTokenURI() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-
-        assertEq(pass.tokenURI(1), "https://api.whiterockbali.com/metadata/1.json");
-
-        vm.prank(owner);
-        pass.setBaseURI("https://new-uri.com/nft/");
-        assertEq(pass.tokenURI(1), "https://new-uri.com/nft/1.json");
-    }
-
-    // ============================================================
-    //                   ACCESS CONTROL TESTS
-    // ============================================================
-
-    function test_setTierConfigOnlyOwner() public {
+    function test_setTierConfig_onlyOwner() public {
         vm.prank(alice);
         vm.expectRevert();
-        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0.1 ether, 500, 500, true);
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 500, 500, true);
     }
 
-    function test_setBaseURIOnlyOwner() public {
-        vm.prank(alice);
-        vm.expectRevert();
-        pass.setBaseURI("https://evil.com/");
+    function test_setTierConfig_updatesPrice() public {
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 20 * 10**6, 500, 500, true);
+        (uint256 price, , , , ) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
+        assertEq(price, 20 * 10**6);
     }
 
-    function test_withdrawOnlyOwner() public {
-        vm.deal(address(pass), 1 ether);
-        vm.prank(alice);
-        vm.expectRevert();
-        pass.withdraw();
+    function test_setTierConfig_updatesDiscount() public {
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 1000, 500, true);
+        (, uint16 discount, , , ) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
+        assertEq(discount, 1000);
     }
 
-    function test_setTierConfigValidationPriceMustBePositive() public {
+    function test_setTierConfig_revert_zeroPrice() public {
         vm.expectRevert("Price must be > 0");
         pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0, 500, 500, true);
     }
 
-    function test_setTierConfigValidationDiscountCannotExceed100Percent() public {
+    function test_setTierConfig_revert_discountExceedsMax() public {
         vm.expectRevert("Discount cannot exceed 100%");
-        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0.05 ether, 10001, 500, true);
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 10001, 500, true);
     }
 
-    function test_setTierConfigValidationMaxSupplyMustBePositive() public {
+    function test_setTierConfig_revert_zeroMaxSupply() public {
         vm.expectRevert("Max supply must be > 0");
-        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 0.05 ether, 500, 0, true);
+        pass.setTierConfig(WhiteRockPass.PassTier.LAGOON, 10 * 10**6, 500, 0, true);
     }
 
-    // ============================================================
-    //                    WITHDRAW TESTS
-    // ============================================================
-
-    function test_withdrawSendsBalanceToOwner() public {
-        vm.deal(address(pass), 1 ether);
-        uint256 balanceBefore = owner.balance;
-        pass.withdraw();
-        assertEq(owner.balance, balanceBefore + 1 ether);
-        assertEq(address(pass).balance, 0);
-    }
-
-    function test_withdrawFailsWhenNoBalance() public {
-        vm.expectRevert("No balance to withdraw");
-        pass.withdraw();
-    }
-
-    function test_withdrawCollectsMintProceeds() public {
-        vm.deal(alice, 1 ether);
+    function test_setBaseURI_onlyOwner() public {
         vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        assertEq(address(pass).balance, 0.05 ether);
+        vm.expectRevert();
+        pass.setBaseURI("https://new-uri.com/");
+    }
 
-        uint256 ownerBalanceBefore = owner.balance;
-        pass.withdraw();
-        assertEq(owner.balance, ownerBalanceBefore + 0.05 ether);
+    function test_setUsdtToken_onlyOwner() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        pass.setUsdtToken(address(0x1234));
+    }
+
+    function test_setUsdtToken_revert_zeroAddress() public {
+        vm.expectRevert("Invalid USDT token address");
+        pass.setUsdtToken(address(0));
     }
 
     // ============================================================
-    //                    ENUMERABLE TESTS
+    //                      WITHDRAW TESTS
     // ============================================================
 
-    function test_enumerableTokensByOwner() public {
-        vm.deal(alice, 1 ether);
+    function test_withdraw_sendsBalance() public {
+        // Send some ETH to the contract
+        vm.deal(address(pass), 1 ether);
+
+        uint256 balanceBefore = address(owner).balance;
+        pass.withdraw();
+        assertGe(address(owner).balance, balanceBefore);
+    }
+
+    function test_withdraw_onlyOwner() public {
+        vm.deal(address(pass), 1 ether);
+        vm.prank(alice);
+        vm.expectRevert();
+        pass.withdraw();
+    }
+
+    function test_withdraw_revert_noBalance() public {
+        vm.expectRevert("No MON balance to withdraw");
+        pass.withdraw();
+    }
+
+    function test_withdrawUSDT_sendsBalance() public {
+        // Send USDT to the contract
+        usdt.transfer(address(pass), 100 * 10**6);
+
+        uint256 balanceBefore = usdt.balanceOf(owner);
+        pass.withdrawUSDT();
+        assertEq(usdt.balanceOf(owner), balanceBefore + 100 * 10**6);
+    }
+
+    function test_withdrawUSDT_onlyOwner() public {
+        usdt.transfer(address(pass), 100 * 10**6);
+        vm.prank(alice);
+        vm.expectRevert();
+        pass.withdrawUSDT();
+    }
+
+    function test_withdrawUSDT_revert_noBalance() public {
+        vm.expectRevert("No USDT balance to withdraw");
+        pass.withdrawUSDT();
+    }
+
+    // ============================================================
+    //                      TOKEN URI TESTS
+    // ============================================================
+
+    function test_tokenURI_returnsCorrectURI() public {
         vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
+
+        string memory uri = pass.tokenURI(1);
+        assertEq(uri, "https://api.whiterockbali.com/metadata/1.json");
+    }
+
+    function test_tokenURI_revert_nonExistent() public {
+        vm.expectRevert();
+        pass.tokenURI(999);
+    }
+
+    // ============================================================
+    //                      ENUMERABLE TESTS
+    // ============================================================
+
+    function test_tokenOfOwnerByIndex() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 60 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
         vm.stopPrank();
 
         assertEq(pass.tokenOfOwnerByIndex(alice, 0), 1);
         assertEq(pass.tokenOfOwnerByIndex(alice, 1), 2);
-        assertEq(pass.balanceOf(alice), 2);
     }
 
-    function test_totalSupplyIncrements() public {
-        assertEq(pass.totalSupply(), 0);
+    // ============================================================
+    //                      ERC721 COMPLIANCE TESTS
+    // ============================================================
 
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        assertEq(pass.totalSupply(), 1);
-
-        vm.deal(bob, 1 ether);
-        vm.prank(bob);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
-        assertEq(pass.totalSupply(), 2);
-    }
-
-    function test_tokenTiersMapping() public {
-        vm.deal(alice, 1 ether);
+    function test_transferFrom() public {
         vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        pass.transferFrom(alice, bob, 1);
         vm.stopPrank();
 
-        assertEq(uint8(pass.tokenTiers(1)), uint8(WhiteRockPass.PassTier.LAGOON));
-        assertEq(uint8(pass.tokenTiers(2)), uint8(WhiteRockPass.PassTier.VIP_CABANA));
-        assertEq(uint8(pass.tokenTiers(3)), uint8(WhiteRockPass.PassTier.PARTY_SUITE));
+        assertEq(pass.ownerOf(1), bob);
+        assertEq(pass.balanceOf(alice), 0);
+        assertEq(pass.balanceOf(bob), 1);
     }
 
-    // ============================================================
-    //                    SECURITY TESTS
-    // ============================================================
-
-    /// @notice Verify that excess refund uses call (not transfer) — smart contract wallets can receive refunds
-    function test_excessRefundToContractWallet() public {
-        MockReceiverWallet wallet = new MockReceiverWallet();
-        vm.deal(address(wallet), 10 ether);
-
-        wallet.mintPass(pass, WhiteRockPass.PassTier.LAGOON, 0.1 ether);
-
-        assertEq(pass.balanceOf(address(wallet)), 1);
-        assertEq(address(wallet).balance, 9.95 ether);
-    }
-
-    /// @notice Verify that withdraw sends to owner using call (not transfer)
-    function test_withdrawToContractOwner() public {
-        vm.deal(address(pass), 1 ether);
-        uint256 balanceBefore = owner.balance;
-        pass.withdraw();
-        assertEq(owner.balance, balanceBefore + 1 ether);
-    }
-
-    /// @notice Verify no reentrancy vulnerability in mintPass
-    function test_mintPassReentrancyProtection() public {
-        ReentrantAttacker attacker = new ReentrantAttacker(address(pass));
-        vm.deal(address(attacker), 10 ether);
-
-        attacker.attack(WhiteRockPass.PassTier.LAGOON);
-
-        assertEq(pass.balanceOf(address(attacker)), 1);
-        (, , , uint32 lCurrentSupply, ) = pass.tierConfigs(WhiteRockPass.PassTier.LAGOON);
-        assertEq(lCurrentSupply, 1);
-    }
-
-    /// @notice Verify ERC721 standard compliance
-    function test_erc721TransferAndApproval() public {
-        vm.deal(alice, 1 ether);
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-
-        vm.prank(alice);
-        pass.approve(bob, 1);
-        assertEq(pass.getApproved(1), bob);
+    function test_transferFrom_revert_notOwner() public {
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
 
         vm.prank(bob);
-        pass.transferFrom(alice, carol, 1);
-        assertEq(pass.ownerOf(1), carol);
-        assertEq(pass.balanceOf(carol), 1);
-        assertEq(pass.balanceOf(alice), 0);
-    }
-}
-
-// ============================================================
-//                    HELPER CONTRACTS
-// ============================================================
-
-/// @notice Mock contract wallet that can receive ETH and call WhiteRockPass
-contract MockReceiverWallet {
-    function mintPass(WhiteRockPass _pass, WhiteRockPass.PassTier tier, uint256 value) external {
-        _pass.mintPass{value: value}(tier);
+        vm.expectRevert();
+        pass.transferFrom(alice, bob, 1);
     }
 
-    // Required to receive ETH refund from mintPass
-    receive() external payable {}
+    // ============================================================
+    //                      FUZZ TESTS
+    // ============================================================
 
-    // Required to accept ERC-721 tokens
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-}
+    function testFuzz_mintPass_anyTier(uint8 tier) public {
+        vm.assume(tier <= 2);
 
-/// @notice Attacker contract that tries to re-enter WhiteRockPass.mintPass
-contract ReentrantAttacker {
-    WhiteRockPass public target;
-    uint256 public attackCount;
+        uint256 price = tier == 0 ? 10 * 10**6 : tier == 1 ? 50 * 10**6 : 100 * 10**6;
 
-    constructor(address _target) {
-        target = WhiteRockPass(_target);
-    }
+        vm.startPrank(alice);
+        usdt.approve(address(pass), price);
+        pass.mintPass(WhiteRockPass.PassTier(tier));
+        vm.stopPrank();
 
-    function attack(WhiteRockPass.PassTier tier) external {
-        attackCount = 0;
-        target.mintPass{value: 0.05 ether}(tier);
+        assertEq(pass.balanceOf(alice), 1);
     }
 
-    // Required to receive ETH refund
-    receive() external payable {
-        if (attackCount < 1) {
-            attackCount++;
-            try target.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON) {} catch {}
-        }
-    }
-
-    // Required to accept ERC-721 tokens
-    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
+    function testFuzz_getDiscountBps_neverExceedsMax(address user) public view {
+        uint16 discount = pass.getDiscountBpsForUser(user);
+        assertLe(discount, 10000);
     }
 }

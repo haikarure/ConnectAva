@@ -1,12 +1,36 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useReadContract } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, WHITE_ROCK_PASS_ABI, PASS_TIERS } from '@/web3/contracts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Loader2, Shield, Sparkles } from 'lucide-react';
 import { useLang } from '@/lib/i18n';
+
+// MockUSDT ERC20 ABI (just approve + allowance)
+const USDT_ABI = [
+  {
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    name: 'approve',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    name: 'allowance',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
 
 interface MintPassButtonProps {
   compact?: boolean;
@@ -17,6 +41,7 @@ export const MintPassButton: React.FC<MintPassButtonProps> = ({ compact = false 
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
   const { tf } = useLang();
   const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [step, setStep] = useState<'idle' | 'approving' | 'minting'>('idle');
 
   // Check if user already owns a pass
   const { data: balance } = useReadContract({
@@ -30,15 +55,32 @@ export const MintPassButton: React.FC<MintPassButtonProps> = ({ compact = false 
   const hasPass = balance !== undefined && balance > 0n;
 
   const handleMint = (tierId: number) => {
+    if (!address) return;
     const tier = PASS_TIERS[tierId];
-    setSelectedTier(tierId);
+    const priceUsdt = parseUnits(tierId === 0 ? '10' : tierId === 1 ? '50' : '100', 6);
 
+    setSelectedTier(tierId);
+    setStep('approving');
+
+    // Step 1: Approve USDT to WhiteRockPass contract
     writeContract({
-      address: CONTRACT_ADDRESSES.whiteRockPass,
-      abi: WHITE_ROCK_PASS_ABI,
-      functionName: 'mintPass',
-      args: [tierId],
-      value: parseEther(tierId === 0 ? '0.05' : tierId === 1 ? '0.2' : '0.5'),
+      address: CONTRACT_ADDRESSES.mockUSDT,
+      abi: USDT_ABI,
+      functionName: 'approve',
+      args: [CONTRACT_ADDRESSES.whiteRockPass, priceUsdt],
+      onSuccess: () => {
+        // Step 2: Mint pass (after approval succeeds)
+        setStep('minting');
+        writeContract({
+          address: CONTRACT_ADDRESSES.whiteRockPass,
+          abi: WHITE_ROCK_PASS_ABI,
+          functionName: 'mintPass',
+          args: [tierId],
+          onSuccess: () => setStep('idle'),
+          onError: () => setStep('idle'),
+        });
+      },
+      onError: () => setStep('idle'),
     });
   };
 
@@ -130,6 +172,20 @@ export const MintPassButton: React.FC<MintPassButtonProps> = ({ compact = false 
             </button>
           ))}
         </div>
+
+        {step === 'approving' && (
+          <div className="flex items-center gap-2 text-amber-300 text-xs p-2 rounded-lg bg-amber-300/10">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Approving USDT spend...
+          </div>
+        )}
+
+        {step === 'minting' && (
+          <div className="flex items-center gap-2 text-amber-300 text-xs p-2 rounded-lg bg-amber-300/10">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Minting NFT Pass...
+          </div>
+        )}
 
         {isSuccess && (
           <div className="flex items-center gap-2 text-emerald-400 text-sm p-3 rounded-lg bg-emerald-400/10 border border-emerald-400/20">

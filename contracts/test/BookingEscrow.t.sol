@@ -35,6 +35,7 @@ contract BookingEscrowTest is Test {
 
         usdt = new MockUSDT(owner);
         pass = new WhiteRockPass("https://api.whiterockbali.com/metadata/", owner);
+        pass.setUsdtToken(address(usdt));
         escrow = new BookingEscrow(address(pass), address(usdt), owner);
 
         // Fund test accounts
@@ -50,6 +51,11 @@ contract BookingEscrowTest is Test {
         usdt.mint(bobFromPk, 100_000 * 10**6);
         vm.prank(owner);
         usdt.mint(carol, 100_000 * 10**6);
+        // Fund pass purchases
+        vm.prank(owner);
+        usdt.mint(alice, 10_000 * 10**6);
+        vm.prank(owner);
+        usdt.mint(bob, 10_000 * 10**6);
     }
 
     // Required to receive ETH from checkIn/withdraw
@@ -105,15 +111,19 @@ contract BookingEscrowTest is Test {
     }
 
     function test_calculateDepositWithLagoonNFT_MON() public {
-        vm.prank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
+        vm.startPrank(alice);
+        usdt.approve(address(pass), 10 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        vm.stopPrank();
         uint256 expected = 0.01 ether - (0.01 ether * 500 / 10000);
         assertEq(escrow.calculateDeposit(alice, 0, address(0)), expected);
     }
 
     function test_calculateDepositWithPartySuiteNFT_USDT() public {
-        vm.prank(carol);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.startPrank(carol);
+        usdt.approve(address(pass), 100 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.stopPrank();
         uint256 expected = 300 * 10**6 - (300 * 10**6 * 2000 / 10000);
         assertEq(escrow.calculateDeposit(carol, 2, address(usdt)), expected);
     }
@@ -125,8 +135,9 @@ contract BookingEscrowTest is Test {
 
     function test_calculateDepositUsesHighestDiscount() public {
         vm.startPrank(alice);
-        pass.mintPass{value: 0.05 ether}(WhiteRockPass.PassTier.LAGOON);
-        pass.mintPass{value: 0.2 ether}(WhiteRockPass.PassTier.VIP_CABANA);
+        usdt.approve(address(pass), 60 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.LAGOON);
+        pass.mintPass(WhiteRockPass.PassTier.VIP_CABANA);
         vm.stopPrank();
         uint256 expected = 0.01 ether - (0.01 ether * 1000 / 10000);
         assertEq(escrow.calculateDeposit(alice, 0, address(0)), expected);
@@ -201,8 +212,10 @@ contract BookingEscrowTest is Test {
     }
 
     function test_createBookingUSDTWithDiscount() public {
-        vm.prank(carol);
-        pass.mintPass{value: 0.5 ether}(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.startPrank(carol);
+        usdt.approve(address(pass), 100 * 10**6);
+        pass.mintPass(WhiteRockPass.PassTier.PARTY_SUITE);
+        vm.stopPrank();
         uint64 visitTs = uint64(block.timestamp + 2 days);
         vm.startPrank(carol);
         usdt.approve(address(escrow), type(uint256).max);

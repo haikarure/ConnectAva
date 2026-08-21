@@ -1,8 +1,8 @@
 // Contract addresses — replace after forge deploy
 export const CONTRACT_ADDRESSES = {
-  whiteRockPass: '0xdE3Cc5dC169877FB65c3E4225f1D18AAaD4996Da' as `0x${string}`,
-  bookingEscrow: '0xE1589000752d7e4458e41e8618296843037C8081' as `0x${string}`,
-  mockUSDT: '0x53aF9A9440d268e8D6e57608B82ef147E105D8bf' as `0x${string}`,
+  whiteRockPass: '0x5Bb5A242A2Db2a40592407676FcfcEe94ce7342E' as `0x${string}`,
+  bookingEscrow: '0x7FB626bcF2722f45e25EEd445385e2Da34B1077e' as `0x${string}`,
+  mockUSDT: '0x53f42a3edfca4927f9754b92b458323c77d6a4fd' as `0x${string}`,
 } as const;
 
 export const WHITE_ROCK_PASS_ABI = [
@@ -117,7 +117,7 @@ export const DAYBED_TYPES = [
 
 // Pass tier mapping
 export const PASS_TIERS = [
-  { id: 0, name: 'Lagoon Pass', price: '0.05 MON', discount: '5%' },
-  { id: 1, name: 'VIP Cabana Pass', price: '0.2 MON', discount: '10%' },
-  { id: 2, name: 'Party Suite Pass', price: '0.5 MON', discount: '20%' },
+  { id: 0, name: 'Lagoon Pass', price: '10 USDT', discount: '5%' },
+  { id: 1, name: 'VIP Cabana Pass', price: '50 USDT', discount: '10%' },
+  { id: 2, name: 'Party Suite Pass', price: '100 USDT', discount: '20%' },
 ] as const;

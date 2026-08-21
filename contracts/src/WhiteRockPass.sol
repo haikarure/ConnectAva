@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -19,6 +21,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  */
 contract WhiteRockPass is ERC721Enumerable, Ownable {
     using Strings for uint256;
+    using SafeERC20 for IERC20;
 
     enum PassTier { LAGOON, VIP_CABANA, PARTY_SUITE }
 
@@ -33,6 +36,7 @@ contract WhiteRockPass is ERC721Enumerable, Ownable {
     mapping(PassTier => TierConfig) public tierConfigs;
     mapping(uint256 => PassTier) public tokenTiers;
     string private _baseTokenURI;
+    IERC20 public usdtToken;
 
     event PassMinted(address indexed minter, uint256 indexed tokenId, PassTier tier);
     event TierConfigUpdated(PassTier indexed tier, uint256 price, uint16 discountBps, uint32 maxSupply, bool active);
@@ -42,28 +46,29 @@ contract WhiteRockPass is ERC721Enumerable, Ownable {
         Ownable(initialOwner)
     {
         _baseTokenURI = baseURI;
+        usdtToken = IERC20(msg.sender); // Set deployer as initial USDT (owner calls setUsdtToken after deploy)
 
-        // Tier 0: Lagoon Pass — 0.05 MON, 5% Discount, 500 Cap
+        // Tier 0: Lagoon Pass — 10 USDT, 5% Discount, 500 Cap
         tierConfigs[PassTier.LAGOON] = TierConfig({
-            price: 0.05 ether,
+            price: 10 * 10**6,  // 10 USDT (6 decimals)
             discountBps: 500,
             maxSupply: 500,
             currentSupply: 0,
             active: true
         });
 
-        // Tier 1: VIP Cabana Pass — 0.2 MON, 10% Discount, 150 Cap
+        // Tier 1: VIP Cabana Pass — 50 USDT, 10% Discount, 150 Cap
         tierConfigs[PassTier.VIP_CABANA] = TierConfig({
-            price: 0.2 ether,
+            price: 50 * 10**6,  // 50 USDT (6 decimals)
             discountBps: 1000,
             maxSupply: 150,
             currentSupply: 0,
             active: true
         });
 
-        // Tier 2: Party Suite Pass — 0.5 MON, 20% Discount, 50 Cap
+        // Tier 2: Party Suite Pass — 100 USDT, 20% Discount, 50 Cap
         tierConfigs[PassTier.PARTY_SUITE] = TierConfig({
-            price: 0.5 ether,
+            price: 100 * 10**6,  // 100 USDT (6 decimals)
             discountBps: 2000,
             maxSupply: 50,
             currentSupply: 0,
@@ -71,11 +76,37 @@ contract WhiteRockPass is ERC721Enumerable, Ownable {
         });
     }
 
+    function setUsdtToken(address _usdtToken) external onlyOwner {
+        require(_usdtToken != address(0), "Invalid USDT token address");
+        usdtToken = IERC20(_usdtToken);
+    }
+
     /**
-     * @notice Mint a membership pass for a specified tier paying native MON.
+     * @notice Mint a membership pass for a specified tier paying with Mock USDT (ERC20).
      * @param tier PassTier enum (0 = LAGOON, 1 = VIP_CABANA, 2 = PARTY_SUITE)
      */
-    function mintPass(PassTier tier) external payable {
+    function mintPass(PassTier tier) external {
+        TierConfig storage config = tierConfigs[tier];
+        require(config.active, "Tier is not active");
+        require(config.currentSupply < config.maxSupply, "Tier sold out");
+        require(address(usdtToken) != address(0), "USDT token not set");
+
+        // Transfer USDT from user to this contract
+        usdtToken.safeTransferFrom(msg.sender, address(this), config.price);
+
+        config.currentSupply++;
+        uint256 tokenId = totalSupply() + 1;
+        tokenTiers[tokenId] = tier;
+
+        _safeMint(msg.sender, tokenId);
+        emit PassMinted(msg.sender, tokenId, tier);
+    }
+
+    /**
+     * @notice Mint a membership pass paying native MON (kept for backwards compatibility).
+     * @param tier PassTier enum (0 = LAGOON, 1 = VIP_CABANA, 2 = PARTY_SUITE)
+     */
+    function mintPassWithMON(PassTier tier) external payable {
         TierConfig storage config = tierConfigs[tier];
         require(config.active, "Tier is not active");
         require(config.currentSupply < config.maxSupply, "Tier sold out");
@@ -88,7 +119,6 @@ contract WhiteRockPass is ERC721Enumerable, Ownable {
         _safeMint(msg.sender, tokenId);
         emit PassMinted(msg.sender, tokenId, tier);
 
-        // Refund excess MON using low-level call to support smart contract wallets
         if (msg.value > config.price) {
             (bool sent, ) = payable(msg.sender).call{value: msg.value - config.price}("");
             require(sent, "Failed to refund excess MON");
@@ -147,8 +177,14 @@ contract WhiteRockPass is ERC721Enumerable, Ownable {
 
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
-        require(balance > 0, "No balance to withdraw");
+        require(balance > 0, "No MON balance to withdraw");
         (bool sent, ) = payable(owner()).call{value: balance}("");
         require(sent, "Failed to send balance");
+    }
+
+    function withdrawUSDT() external onlyOwner {
+        uint256 balance = usdtToken.balanceOf(address(this));
+        require(balance > 0, "No USDT balance to withdraw");
+        usdtToken.safeTransfer(owner(), balance);
     }
 }

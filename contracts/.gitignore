@@ -16,3 +16,6 @@ certora_internal/
 
 # Slither output
 crytic-export/
+
+# Broadcast files
+broadcast/
