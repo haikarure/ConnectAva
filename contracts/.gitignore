@@ -13,3 +13,6 @@ lib/
 
 # Certora internal
 certora_internal/
+
+# Slither output
+crytic-export/
