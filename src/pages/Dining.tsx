@@ -1,118 +1,169 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Reveal } from "@/components/ui/Reveal";
-import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageHero } from "@/components/layout/PageHero";
+import { Reveal } from "@/components/ui/Reveal";
+import { Button } from "@/components/ui/button";
+import { CONTACT } from "@/data/whiterock";
+import { Utensils, Wine, Cigarette, Phone, Mail, ExternalLink } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { KITCHEN_MENU, BAR_MENU } from "@/data/whiterock";
-import { ChefHat, GlassWater, Clock, ArrowRight, Flame } from "lucide-react";
 
-function MenuList({
-  items,
-  accent,
-}: {
-  items: typeof KITCHEN_MENU;
-  accent: string;
-}) {
-  const { tf, formatPrice } = useLang();
-  return (
-    <div className="space-y-4">
-      {items.map((m, i) => (
-        <Reveal key={i} delay={i * 60}>
-          <div className="glass rounded-2xl p-5 flex items-start justify-between gap-4 hover:border-amber-400/30 transition-colors">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="font-semibold text-white text-lg">{tf(m.name)}</h4>
-                {m.tag && (
-                  <Badge className={`${accent} text-black text-[10px] uppercase tracking-wider`}>{tf(m.tag)}</Badge>
-                )}
-              </div>
-              <p className="text-sm text-slate-400 font-light mt-1">{tf(m.desc)}</p>
-            </div>
-            <div className="text-amber-300 font-bold whitespace-nowrap">{formatPrice(m.priceIdr)}</div>
-          </div>
-        </Reveal>
-      ))}
-    </div>
-  );
-}
+const MENU_CATEGORIES = [
+  {
+    id: "food",
+    name: "FOOD MENU",
+    subtitle: "Local & International Culinary Masterpieces",
+    desc: "Meticulously crafted by our talented Chefs using only the freshest, locally and ethically sourced ingredients.",
+    icon: Utensils,
+    image: "/assets/whiterock/menu-food.jpg",
+    link: "https://whiterockbali.com/foodmenu/",
+  },
+  {
+    id: "drinks",
+    name: "DRINKS MENU",
+    subtitle: "Balinese Botanical Cocktails & Signature Mixology",
+    desc: "Take a journey through our menu. Explore Bartender favorites, signature cocktails, and premium botanical spirits.",
+    icon: Wine,
+    image: "/assets/whiterock/menu-cocktail.jpg",
+    link: "https://whiterockbali.com/beveragemenu/",
+  },
+  {
+    id: "shisha",
+    name: "SHISHA MENU",
+    subtitle: "Golden Spritz Shisha & Artisanal Flavors",
+    desc: "Savor premium artisanal shisha with breathtaking cliffside Melasti sunset views from our VIP lounges.",
+    icon: Cigarette,
+    image: "/assets/whiterock/menu-shisha.jpg",
+    link: "https://drive.google.com/file/d/1JIbexloaQW6ibx9DqVvg7Y_2EF8pC42G/view?usp=drive_link",
+  },
+];
 
 export default function Dining() {
   const { tf } = useLang();
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)] min-h-screen">
+      {/* 1:1 Page Hero Matching whiterockbali.com/menu/ with official gourmet burger photo */}
       <PageHero
-        bgImage="/assets/whiterock/aerial.jpg"
-        eyebrow={tf({ id: "Dining & Bar", en: "Dining & Bar", ru: "Ресторан и бар", ko: "다이닝 & 바" })}
-        title={tf({ id: "Dari Laut ke Gelas", en: "From the Sea to the Glass", ru: "От моря к бокалу", ko: "바다에서 잔까지" })}
-        subtitle={tf({
-          id: "White Rock Kitchen & Cliffside Mixology Bar — makanan laut segar dan cocktail botani Bali dengan view sunset Melasti.",
-          en: "White Rock Kitchen & Cliffside Mixology Bar — fresh seafood and Balinese botanical cocktails with Melasti sunset views.",
-          ru: "White Rock Kitchen и Cliffside Mixology Bar — свежие морепродукты и балийские ботанические коктейли с видами на закат Melasti.",
-          ko: "White Rock Kitchen 및 Cliffside Mixology Bar — 신선한 해산물과 발리의 보태니컬 칵테일, Melasti의 석양 뷰.",
-        })}
-      />
-
-      {/* Kitchen */}
-      <section className="py-20 px-5 md:px-8" id="kitchen">
-        <div className="container mx-auto max-w-5xl">
-          <SectionHeading
-            align="left"
-            eyebrow={tf({ id: "Restoran", en: "Restaurant", ru: "Ресторан", ko: "레스토랑" })}
-            title={tf({ id: "White Rock Kitchen", en: "White Rock Kitchen", ru: "White Rock Kitchen", ko: "White Rock Kitchen" })}
-            subtitle={tf({
-              id: "Seafood Jimbaran bakar, Wagyu sliders, wood-fired pizza, dan tropical bowls — buka setiap hari 10:00 - 23:00.",
-              en: "Grilled Jimbaran seafood, Wagyu sliders, wood-fired pizza, and tropical bowls — served daily 10:00 AM - 11:00 PM.",
-              ru: "Жареные морепродукты Jimbaran, бургеры Wagyu, пицца на дровах и тропические боулы — ежедневно с 10:00 до 23:00.",
-              ko: "구운 Jimbaran 해산물, Wagyu 슬라이더, 화덕 피자, 트로피컬 보울 — 매일 10:00 - 23:00 운영.",
-            })}
-          />
-          <MenuList items={KITCHEN_MENU} accent="bg-amber-400" />
+        bgImage="/assets/whiterock/menu-hero-burger.jpg"
+        eyebrow="MENU & DINING EXPERIENCE"
+        title="DISCOVER GLOBAL CULINARY TREASURE"
+        subtitle="Savor the flavors with our diverse menu of local and international cuisines at White Rock Beach Club ✨"
+        height="tall"
+      >
+        {/* Top 3 Quick Links Bar - 100% Uniform Luxury Gold Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-3.5 mt-6">
+          <a href="https://whiterockbali.com/foodmenu/" target="_blank" rel="noreferrer">
+            <Button variant="luxury" size="md" className="rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all duration-300">
+              <Utensils className="h-4 w-4 mr-2" /> FOOD MENU <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-75" />
+            </Button>
+          </a>
+          <a href="https://whiterockbali.com/beveragemenu/" target="_blank" rel="noreferrer">
+            <Button variant="luxury" size="md" className="rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all duration-300">
+              <Wine className="h-4 w-4 mr-2" /> DRINKS MENU <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-75" />
+            </Button>
+          </a>
+          <a href="https://drive.google.com/file/d/1JIbexloaQW6ibx9DqVvg7Y_2EF8pC42G/view?usp=drive_link" target="_blank" rel="noreferrer">
+            <Button variant="luxury" size="md" className="rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all duration-300">
+              <Cigarette className="h-4 w-4 mr-2" /> SHISHA MENU <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-75" />
+            </Button>
+          </a>
         </div>
-      </section>
+      </PageHero>
 
-      {/* Bar */}
-      <section className="py-20 px-5 md:px-8 relative overflow-hidden" id="bar">
-        <div className="absolute inset-0 ambient opacity-50" />
-        <div className="relative container mx-auto max-w-5xl">
-          <SectionHeading
-            align="left"
-            eyebrow={tf({ id: "Cliffside Bar", en: "Cliffside Bar", ru: "Cliffside Bar", ko: "Cliffside Bar" })}
-            title={tf({ id: "Cliffside Mixology", en: "Cliffside Mixology", ru: "Cliffside Mixology", ko: "Cliffside Mixology" })}
-            subtitle={tf({
-              id: "Signature cocktail dengan botanikal lokal, champagne import, dan premium bottle service. Happy Hour 16:00 - 19:00.",
-              en: "Signature cocktails with local botanicals, imported champagne, and premium bottle service. Happy Hour 4:00 - 7:00 PM.",
-              ru: "Авторские коктейли с местными ботаникалами, импортный шампанское и премиальный bottle service. Happy Hour 16:00 - 19:00.",
-              ko: "현지 보태니컬 시그니처 칵테일, 수입 샴페인, 프리미엄 보틀 서비스. 해피 아워 16:00 - 19:00.",
-            })}
-          />
-          <MenuList items={BAR_MENU} accent="bg-amber-400" />
-        </div>
-      </section>
-
-      {/* Happy hour banner */}
+      {/* Clean 3 Menu Cards Grid */}
       <section className="py-16 px-5 md:px-8">
-        <div className="container mx-auto max-w-5xl">
-          <Reveal>
-            <div className="glass-strong rounded-[2rem] p-8 md:p-12 grid md:grid-cols-3 gap-6 items-center border border-amber-400/20">
-              <div className="md:col-span-2 space-y-3">
-                <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-amber-300 font-semibold">
-                  <Flame className="h-4 w-4" /> {tf({ id: "Happy Hour", en: "Happy Hour", ru: "Happy Hour", ko: "해피 아워" })}
-                </span>
-                <h3 className="font-cinzel text-2xl md:text-3xl font-bold text-white">
-                  {tf({ id: "4 PM - 7 PM Setiap Hari", en: "4 PM - 7 PM Daily", ru: "4 PM - 7 PM ежедневно", ko: "매일 4 PM - 7 PM" })}
-                </h3>
-                <p className="text-slate-300/80 font-light flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-amber-300" /> {tf({ id: "Setiap hari • Free entrance", en: "Every day • Free entrance", ru: "Каждый день • Вход свободный", ko: "매일 • 무료 입장" })}
-                </p>
-              </div>
-              <Button variant="luxury" size="lg" className="md:justify-self-end" onClick={() => navigate("/booking")}>
-                {tf({ id: "Reservasi Meja", en: "Reserve a Table", ru: "Забронировать стол", ko: "테이블 예약" })} <ArrowRight className="h-4 w-4" />
-              </Button>
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {MENU_CATEGORIES.map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <Reveal key={item.id} delay={i * 80}>
+                  <a
+                    id={item.id}
+                    href={item.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="glow-card glass rounded-3xl overflow-hidden group cursor-pointer border border-white/10 hover:border-amber-400/40 transition-all duration-500 flex flex-col justify-between h-[440px]"
+                  >
+                    {/* Real Photography Image Container */}
+                    <div className="relative h-60 overflow-hidden rounded-t-3xl transform-gpu">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-out will-change-transform transform-gpu"
+                        style={{ backfaceVisibility: "hidden" }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                      
+                      {/* Subpixel anti-aliasing seam patch */}
+                      <div className="absolute -bottom-1 inset-x-0 h-2 bg-slate-950 z-10 pointer-events-none" />
+
+                      {/* Icon Badge */}
+                      <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-xs font-black p-2.5 rounded-full shadow-lg z-20">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                    </div>
+
+                    {/* Content Body */}
+                    <div className="p-6 -mt-px relative z-20 bg-slate-950 flex flex-col justify-between flex-1">
+                      <div>
+                        <h3 className="font-cinzel text-xl font-bold text-white group-hover:text-amber-300 transition-colors">
+                          {item.name}
+                        </h3>
+                        <div className="text-amber-400/90 text-xs font-semibold mt-1">
+                          {item.subtitle}
+                        </div>
+                        <p className="text-xs text-slate-400 font-light mt-2 leading-relaxed">
+                          {item.desc}
+                        </p>
+                      </div>
+
+                      {/* Card Action Hint */}
+                      <div className="pt-4 border-t border-white/10 mt-auto flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider group-hover:text-amber-200 transition-colors">
+                        <span>VIEW PDF MENU</span>
+                        <ExternalLink className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </a>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          {/* Reservation by Phone & Email Strip */}
+          <Reveal className="mt-16">
+            <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+              <a
+                href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="glow-card glass rounded-2xl p-6 flex items-center gap-4 border border-white/10 hover:border-amber-400/40 transition-all group"
+              >
+                <div className="h-12 w-12 rounded-full glass-strong grid place-items-center text-amber-300 shrink-0 group-hover:scale-110 transition-transform">
+                  <Phone className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold">RESERVATION BY PHONE</div>
+                  <div className="text-white font-bold text-base mt-0.5 group-hover:text-amber-300 transition-colors">
+                    {CONTACT.whatsapp}
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href={`mailto:${CONTACT.email}`}
+                className="glow-card glass rounded-2xl p-6 flex items-center gap-4 border border-white/10 hover:border-amber-400/40 transition-all group"
+              >
+                <div className="h-12 w-12 rounded-full glass-strong grid place-items-center text-amber-300 shrink-0 group-hover:scale-110 transition-transform">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold">RESERVATION BY EMAIL</div>
+                  <div className="text-white font-bold text-base mt-0.5 group-hover:text-amber-300 transition-colors">
+                    {CONTACT.email}
+                  </div>
+                </div>
+              </a>
             </div>
           </Reveal>
         </div>

@@ -14,6 +14,8 @@ type LangContextValue = {
   tf: (s: TString) => string;
   /** Format an IDR base amount into the active currency */
   formatPrice: (idr: number) => string;
+  /** Localized "price on request" label (used when the website does not publish a price) */
+  onRequest: () => string;
 };
 
 const LangContext = createContext<LangContextValue | null>(null);
@@ -54,11 +56,13 @@ export const LangProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const tf = useCallback(
-    (s: TString) => {
+    (s: TString | string | undefined | null) => {
+      if (!s) return "";
+      if (typeof s === "string") return s;
       if (lang === "id" && s.id) return s.id;
-      if (lang === "ru") return s.ru ?? s.en;
-      if (lang === "ko") return s.ko ?? s.en;
-      return s.en;
+      if (lang === "ru") return s.ru ?? s.en ?? s.id ?? "";
+      if (lang === "ko") return s.ko ?? s.en ?? s.id ?? "";
+      return s.en ?? s.id ?? "";
     },
     [lang]
   );
@@ -72,8 +76,18 @@ export const LangProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [currency]
   );
 
+  const onRequest = useCallback(
+    () => {
+      if (lang === "id") return "Tanya Harga";
+      if (lang === "ru") return "По запросу";
+      if (lang === "ko") return "문의";
+      return "On Request";
+    },
+    [lang]
+  );
+
   return (
-    <LangContext.Provider value={{ lang, currency, setLang, setCurrency, tf, formatPrice }}>
+    <LangContext.Provider value={{ lang, currency, setLang, setCurrency, tf, formatPrice, onRequest }}>
       {children}
     </LangContext.Provider>
   );

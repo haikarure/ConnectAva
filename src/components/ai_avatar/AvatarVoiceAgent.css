@@ -3,10 +3,11 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 300px;
-  padding: 6px;
+  max-width: 100%;
+  padding: 4px;
   height: auto;
   box-sizing: border-box;
+  overflow: hidden !important;
 }
 
 .voice-assistant-container video,
@@ -14,13 +15,15 @@
   width: 100% !important;
   max-height: 200px !important;
   object-fit: cover !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
 }
 
 .visualizer-container {
   width: 100%;
-  height: 35px;
+  height: 24px;
   margin: 0 auto 4px auto;
+  overflow: hidden !important;
 }
 
 .control-section {
@@ -53,4 +56,13 @@
 
 .message-text {
   color: #333;
+}
+
+/* Hide all horizontal and vertical scrollbars */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+*::-webkit-scrollbar {
+  display: none !important;
 }

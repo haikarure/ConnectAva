@@ -1,28 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { CategoryHeader } from "@/components/ui/CategoryHeader";
 import { PageHero } from "@/components/layout/PageHero";
 import { useLang } from "@/lib/i18n";
+import { RECURRING_EVENTS, ASSETS } from "@/data/whiterock";
 import { Calendar, MapPin, Music, ArrowRight, Ticket } from "lucide-react";
-
-const EVENTS = [
-  { day: "FRI", date: "Every Fri", title: { id: "Weekend Party Wave", en: "Weekend Party Wave" }, desc: { id: "DJ headline & bottle parade poolside.", en: "Headline DJs & poolside bottle parade." }, tag: { id: "Weekly", en: "Weekly" }, accent: "from-rose-500/20" },
-  { day: "SAT", date: "Every Sat", title: { id: "Sunset Sax Sessions", en: "Sunset Sax Sessions" }, desc: { id: "Live saxophone melodic house saat sunset.", en: "Live saxophone melodic house at sunset." }, tag: { id: "Weekly", en: "Weekly" }, accent: "from-amber-500/20" },
-  { day: "31", date: "Dec 31", title: { id: "NYE 2026 Gala", en: "NYE 2026 Gala" }, desc: { id: "Pesta pergantian tahun paling epik Bali.", en: "Bali's most epic New Year's gala." }, tag: { id: "Signature", en: "Signature" }, accent: "from-amber-500/20" },
-  { day: "FULL", date: "Monthly", title: { id: "Full Moon Festival", en: "Full Moon Festival" }, desc: { id: "Perayaan pantai di bawah cahaya tebing.", en: "Beachfront celebration under cliff glow." }, tag: { id: "Monthly", en: "Monthly" }, accent: "from-orange-500/20" },
-];
 
 export default function Events() {
   const { tf } = useLang();
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)]">
       <PageHero
-        video
+        bgImage={ASSETS.partyBed}
         eyebrow={tf({ id: "DJ & Events", en: "DJ & Events", ru: "DJ и мероприятия", ko: "DJ & 이벤트" })}
         title={tf({ id: "Nights to Remember", en: "Nights to Remember", ru: "Ночи, которые стоит помнить", ko: "잊지 못할 밤들" })}
         subtitle={tf({
@@ -41,30 +35,20 @@ export default function Events() {
             title={tf({ id: "Jadwal Pesta", en: "The Party Calendar", ru: "Календарь вечеринок", ko: "파티 일정" })}
           />
           <div className="grid md:grid-cols-2 gap-6">
-            {EVENTS.map((e, i) => (
-              <Reveal key={i} delay={i * 80}>
+            {RECURRING_EVENTS.map((e, i) => (
+              <Reveal key={e.id} delay={i * 80}>
                 <Card className="glow-card glass rounded-3xl overflow-hidden h-full">
-                  <div className={`flex`}>
-                    <div className={`w-28 shrink-0 bg-gradient-to-br ${e.accent} grid place-items-center p-4`}>
-                      <div className="text-center">
-                        <div className="font-cinzel text-2xl font-bold text-white">{e.day}</div>
-                        <div className="text-xs text-white/70">{e.date}</div>
-                      </div>
+                  <CategoryHeader accent={e.accent} icon={<Music className="h-7 w-7" />} height="h-36" />
+                  <CardContent className="p-6">
+                    <h3 className="font-cinzel text-xl font-bold text-white mb-2">{tf(e.name)}</h3>
+                    <p className="text-sm text-slate-300/80 font-light mb-4">{tf(e.desc)}</p>
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1 text-xs text-slate-400"><MapPin className="h-3 w-3 text-amber-300" /> {tf({ id: "Melasti Beach", en: "Melasti Beach", ru: "Melasti Beach", ko: "Melasti Beach" })}</span>
+                      <Button variant="ghost" size="sm" className="text-amber-300 p-0 ml-auto" onClick={() => navigate("/booking")}>
+                        {tf({ id: "Detail", en: "Details", ru: "Подробнее", ko: "자세히" })} <ArrowRight className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <CardContent className="p-6 flex-1">
-                      <div className="flex items-center justify-between gap-3 mb-2">
-                        <h3 className="font-cinzel text-xl font-bold text-white">{tf(e.title)}</h3>
-                        <Badge className="bg-amber-400 text-black text-[10px] uppercase">{tf(e.tag)}</Badge>
-                      </div>
-                      <p className="text-sm text-slate-400 font-light mb-4">{tf(e.desc)}</p>
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1 text-xs text-slate-400"><MapPin className="h-3 w-3 text-amber-300" /> {tf({ id: "Melasti Beach", en: "Melasti Beach", ru: "Melasti Beach", ko: "Melasti Beach" })}</span>
-                        <Button variant="ghost" size="sm" className="text-amber-300 p-0 ml-auto" onClick={() => e.title.en.includes("NYE") ? navigate("/nye") : navigate("/booking")}>
-                          {tf({ id: "Detail", en: "Details", ru: "Подробнее", ko: "자세히" })} <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </div>
+                  </CardContent>
                 </Card>
               </Reveal>
             ))}

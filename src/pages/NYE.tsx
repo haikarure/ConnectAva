@@ -5,31 +5,19 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageHero } from "@/components/layout/PageHero";
 import { useLang } from "@/lib/i18n";
-import { ASSETS } from "@/data/whiterock";
-import { Ticket, Sparkles, Music, Wine, ArrowRight, Check } from "lucide-react";
-
-const TICKETS = [
-  { name: { id: "Early Bird", en: "Early Bird", ru: "Early Bird", ko: "얼리버드" }, priceIdr: 1_500_000, perks: [true, true, false], accent: "from-amber-500/20" },
-  { name: { id: "VIP Gala", en: "VIP Gala", ru: "VIP Gala", ko: "VIP 갈라" }, priceIdr: 4_500_000, perks: [true, true, true], accent: "from-amber-500/20" },
-  { name: { id: "Cabana Package", en: "Cabana Package", ru: "Кабана-пакет", ko: "카바나 패키지" }, priceIdr: 25_000_000, perks: [true, true, true], accent: "from-rose-500/20" },
-];
-
-const PERK_LABELS = [
-  { id: "Akses all-night + fireworks", en: "All-night access + fireworks", ru: "Доступ всю ночь + фейерверк", ko: "밤새 이용 + 불꽃놀이" },
-  { id: "Welcome drink & F&B credit", en: "Welcome drink & F&B credit", ru: "Welcome drink и кредит F&B", ko: "웰컴 드링크 및 F&B 크레딧" },
-  { id: "Private cabana & bottle", en: "Private cabana & bottle", ru: "Приватная кабана и бутылка", ko: "프라이빗 카바나 및 보틀" },
-];
+import { NYE as NYE_DATA, ASSETS } from "@/data/whiterock";
+import { Sparkles, Music, Wine, ArrowRight, CalendarDays, Clock } from "lucide-react";
 
 export default function NYE() {
-  const { tf, formatPrice } = useLang();
+  const { tf, onRequest } = useLang();
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)]">
       <PageHero
-        video
-        eyebrow={tf({ id: "31 Desember 2026", en: "December 31, 2026", ru: "31 декабря 2026", ko: "2026년 12월 31일" })}
-        title={tf({ id: "NYE 2026", en: "NYE 2026", ru: "NYE 2026", ko: "NYE 2026" })}
+        bgImage={ASSETS.aerial}
+        eyebrow={tf(NYE_DATA.title)}
+        title={tf({ id: "31 Desember 2026", en: "December 31, 2026", ru: "31 декабря 2026", ko: "2026년 12월 31일" })}
         subtitle={tf({
           id: "Pesta pergantian tahun paling epik di Bali — di atas tebing Melasti dengan fireworks, DJ internasional, dan laut di bawah kaki kamu.",
           en: "Bali's most epic New Year's party — above the Melasti cliffs with fireworks, international DJs, and the ocean at your feet.",
@@ -44,10 +32,10 @@ export default function NYE() {
         <div className="relative container mx-auto max-w-6xl">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: Music, t: { id: "DJ Internasional", en: "International DJs", ru: "Международные DJ", ko: "인터내셔널 DJ" } },
+              { icon: Music, t: { id: "8 Set DJ", en: "8 DJ Sets", ru: "8 DJ-сетов", ko: "8 DJ 셋" } },
               { icon: Sparkles, t: { id: "Fireworks Pantai", en: "Beachside Fireworks", ru: "Фейерверк у пляжа", ko: "해변 불꽃놀이" } },
               { icon: Wine, t: { id: "Open Bar & Bottle", en: "Open Bar & Bottle", ru: "Открытый бар и бутылки", ko: "오픈 바 및 보틀" } },
-              { icon: Sparkles, t: { id: "Golden Hour Countdown", en: "Golden Hour Countdown", ru: "Обратный отсчёт на закате", ko: "골든 아워 카운트다운" } },
+              { icon: CalendarDays, t: { id: "Midnight Countdown", en: "Midnight Countdown", ru: "Обратный отсчёт", ko: "미드나잇 카운트다운" } },
             ].map((h, i) => {
               const Icon = h.icon;
               return (
@@ -63,37 +51,57 @@ export default function NYE() {
         </div>
       </section>
 
-      {/* Tickets */}
+      {/* Detail */}
       <section className="py-20 px-5 md:px-8">
         <div className="container mx-auto max-w-6xl">
           <SectionHeading
-            eyebrow={tf({ id: "Tiket", en: "Tickets", ru: "Билеты", ko: "티켓" })}
-            title={tf({ id: "Pilih Paketmu", en: "Choose Your Package", ru: "Выберите свой пакет", ko: "패키지 선택" })}
-            subtitle={tf({ id: "Early bird terbatas — harga naik tiap batch.", en: "Limited early bird — price rises each batch.", ru: "Ограниченный early bird — цена растёт с каждой партией.", ko: "한정된 얼리버드 — 배치마다 가격 인상." })}
+            eyebrow={tf({ id: "Detil Event", en: "Event Details", ru: "Детали события", ko: "이벤트 상세" })}
+            title={tf(NYE_DATA.title)}
           />
-          <div className="grid md:grid-cols-3 gap-6">
-            {TICKETS.map((t, i) => (
-              <Reveal key={i} delay={i * 90}>
-                <Card className="glow-card glass rounded-3xl overflow-hidden h-full">
-                  <div className={`h-2 bg-gradient-to-r ${t.accent}`} />
-                  <CardContent className="p-7">
-                    <h3 className="font-cinzel text-2xl font-bold text-white mb-1">{tf(t.name)}</h3>
-                    <div className="text-amber-300 font-bold text-xl mb-5">{formatPrice(t.priceIdr)}</div>
-                    <ul className="space-y-3 mb-6">
-                      {PERK_LABELS.map((p, k) => (
-                        <li key={k} className={`flex items-center gap-2 text-sm ${t.perks[k] ? "text-slate-200" : "text-slate-600 line-through"}`}>
-                          {t.perks[k] ? <Check className="h-4 w-4 text-amber-300 shrink-0" /> : <Check className="h-4 w-4 text-slate-600 shrink-0" />}
-                          {tf(p)}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button variant="luxury" className="w-full" onClick={() => navigate("/booking")}>
-                      {tf({ id: "Beli Tiket", en: "Get Tickets", ru: "Купить билеты", ko: "티켓 구매" })} <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            ))}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Reveal>
+              <Card className="glow-card glass rounded-3xl h-full">
+                <CardContent className="p-7 space-y-4">
+                  <div className="flex items-center gap-3 text-slate-200">
+                    <Clock className="h-5 w-5 text-amber-300" />
+                    <span className="text-lg font-semibold text-white">{tf(NYE_DATA.gates)}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel text-lg font-bold text-amber-300 mb-2">{tf({ id: "Lineup", en: "Lineup", ru: "Лайнап", ko: "라인업" })}</h4>
+                    <p className="text-sm text-slate-300/80 font-light">{tf(NYE_DATA.lineup)}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel text-lg font-bold text-amber-300 mb-2">{tf({ id: "Musik", en: "Music", ru: "Музыка", ko: "음악" })}</h4>
+                    <p className="text-sm text-slate-300/80 font-light">{tf(NYE_DATA.music)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Reveal>
+            <Reveal delay={120}>
+              <Card className="glow-card glass rounded-3xl h-full">
+                <CardContent className="p-7 space-y-4">
+                  <div>
+                    <h4 className="font-cinzel text-lg font-bold text-amber-300 mb-2">{tf({ id: "Fireworks", en: "Fireworks", ru: "Фейерверк", ko: "불꽃놀이" })}</h4>
+                    <p className="text-sm text-slate-300/80 font-light">{tf(NYE_DATA.fireworks)}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-cinzel text-lg font-bold text-amber-300 mb-2">{tf({ id: "Seating", en: "Seating", ru: "Рассадка", ko: "좌석" })}</h4>
+                    <p className="text-sm text-slate-300/80 font-light">{tf(NYE_DATA.seating)}</p>
+                  </div>
+                  <div className="pt-3 border-t border-white/10">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">{tf({ id: "Tiket", en: "Tickets", ru: "Билеты", ko: "티켓" })}</span>
+                      <span className="font-medium text-amber-300">{onRequest()}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Reveal>
+          </div>
+          <div className="mt-10 text-center">
+            <Button variant="luxury" size="lg" onClick={() => navigate("/contact")}>
+              {tf({ id: "Tanya Sarah soal Tiket", en: "Ask Sarah About Tickets", ru: "Спросите Sarah о билетах", ko: "티켓은 Sarah에게 문의" })} <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </section>

@@ -49,7 +49,7 @@ export default function LiveWeather() {
   const openSarah = () => window.dispatchEvent(new CustomEvent("open-sarah"));
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)]">
       <PageHero
         bgImage="/assets/whiterock/aerial.jpg"
         eyebrow={tf({ id: "Live Conditions", en: "Live Conditions", ru: "Текущие условия", ko: "실시간 상태" })}

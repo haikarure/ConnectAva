@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { PageHero } from "@/components/layout/PageHero";
 import { Reveal } from "@/components/ui/Reveal";
 import { useLang } from "@/lib/i18n";
-import { CONTRACT_ADDRESSES, BOOKING_ESCROW_ABI, DAYBED_TYPES } from "@/web3/contracts";
-import { QrCode, CheckCircle, Loader2, ExternalLink, AlertTriangle, Users } from "lucide-react";
+import { CONTRACT_ADDRESSES, BOOKING_ESCROW_ABI } from "@/web3/contracts";
+import { QrCode, CheckCircle, Loader2, ExternalLink, AlertTriangle, ShieldCheck } from "lucide-react";
 
-const StaffCheckIn = () => {
+export default function StaffCheckIn() {
   const { address, isConnected } = useAccount();
   const { tf } = useLang();
   const [bookingIdInput, setBookingIdInput] = useState("");
@@ -19,7 +19,7 @@ const StaffCheckIn = () => {
 
   const { writeContractAsync } = useWriteContract();
 
-  const { data: bookingData, isLoading: isLoadingBooking, refetch } = useReadContract({
+  const { refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.bookingEscrow,
     abi: BOOKING_ESCROW_ABI,
     functionName: "getUserBookings",
@@ -49,90 +49,99 @@ const StaffCheckIn = () => {
 
   if (!isConnected) {
     return (
-      <div>
+      <div className="bg-[hsl(222_47%_9%)] min-h-screen">
         <PageHero
-          eyebrow={{ id: "Staff Portal", en: "Staff Portal", ru: "Портал.staff", ko: "스태프 포털" }}
-          title={{ id: "Guest Check-In", en: "Guest Check-In", ru: "Регистрация гостя", ko: "게스트 체크인" }}
-          subtitle={{ id: "Scan QR atau masukkan Booking ID untuk check-in guest.", en: "Scan QR or enter Booking ID to check-in guests.", ru: "Отсканируйте QR или введите Booking ID для регистрации.", ko: "QR 스캔 또는 Booking ID 입력으로 게스트 체크인." }}
-        />
-        <section className="py-16 px-5 md:px-8">
-          <div className="container mx-auto max-w-2xl text-center">
-            <ConnectButton label={tf({ id: "Login dengan Admin Wallet", en: "Login with Admin Wallet", ru: "Войти с Admin-кошельком", ko: "관리자 지갑으로 로그인" })} />
+          bgImage="/assets/whiterock/aerial.jpg"
+          eyebrow="STAFF VERIFICATION PORTAL"
+          title="GUEST CHECK-IN TERMINAL"
+          subtitle="Connect venue administrator wallet to verify guest arrivals and release escrow funds on Monad Testnet."
+          height="tall"
+        >
+          <div className="mt-8 flex justify-center">
+            <ConnectButton />
           </div>
-        </section>
+        </PageHero>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="bg-[hsl(222_47%_9%)] min-h-screen text-slate-100">
       <PageHero
-        eyebrow={{ id: "Staff Portal", en: "Staff Portal", ru: "Портал.staff", ko: "스태프 포털" }}
-        title={{ id: "Guest Check-In", en: "Guest Check-In", ru: "Регистрация гостя", ko: "게스트 체크인" }}
-        subtitle={{ id: "Masukkan Booking ID untuk memverifikasi dan check-in guest.", en: "Enter Booking ID to verify and check-in guests.", ru: "Введите Booking ID для верификации и регистрации.", ko: "Booking ID를 입력하여 게스트를 확인하고 체크인하세요." }}
+        bgImage="/assets/whiterock/aerial.jpg"
+        eyebrow="STAFF VERIFICATION PORTAL"
+        title="GUEST CHECK-IN TERMINAL"
+        subtitle="Verify guest QR code or Booking ID to execute instant check-in and release escrow deposits."
+        height="tall"
       />
 
       <section className="py-16 px-5 md:px-8">
         <div className="container mx-auto max-w-2xl space-y-6">
-          {/* Check-In Input */}
+          {/* Check-In Input Card */}
           <Reveal>
-            <Card className="glass rounded-3xl border-amber-300/20">
+            <Card className="glow-card glass rounded-3xl border border-amber-300/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-300">
-                  <QrCode className="h-5 w-5" />
-                  {tf({ id: "Booking ID Check-In", en: "Booking ID Check-In", ru: "Регистрация по Booking ID", ko: "Booking ID 체크인" })}
+                <CardTitle className="flex items-center gap-2.5 font-cinzel text-xl text-white">
+                  <QrCode className="h-5 w-5 text-amber-300" />
+                  VERIFY GUEST BOOKING ID
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-3">
+              <CardContent className="space-y-5">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="number"
                     value={bookingIdInput}
                     onChange={(e) => setBookingIdInput(e.target.value)}
-                    placeholder={tf({ id: "Masukkan Booking ID (contoh: 1)", en: "Enter Booking ID (e.g. 1)", ru: "Введите Booking ID (напр. 1)", ko: "Booking ID 입력 (예: 1)" })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-amber-300/50"
+                    placeholder="Enter Booking ID (e.g. 1)"
+                    className="flex-1 px-5 py-3.5 rounded-2xl bg-slate-950/80 border border-white/20 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-cinzel text-sm"
                   />
                   <Button
                     variant="luxury"
                     disabled={isChecking || !bookingIdInput}
                     onClick={handleCheckIn}
-                    className="px-6"
+                    className="rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all"
                   >
                     {isChecking ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
                     ) : (
-                      tf({ id: "Check-In", en: "Check-In", ru: "Регистрация", ko: "체크인" })
+                      "EXECUTE CHECK-IN"
                     )}
                   </Button>
                 </div>
 
                 {result && (
-                  <div className={`p-4 rounded-xl ${result.success ? "bg-emerald-400/10 border border-emerald-400/20" : "bg-rose-400/10 border border-rose-400/20"}`}>
+                  <div
+                    className={`p-5 rounded-2xl border transition-all ${
+                      result.success
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                        : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                    }`}
+                  >
                     {result.success ? (
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                        <div className="flex items-center gap-2 font-cinzel text-base font-bold text-emerald-400">
                           <CheckCircle className="h-5 w-5" />
-                          {tf({ id: "Check-in Berhasil!", en: "Check-in Successful!", ru: "Регистрация прошла успешно!", ko: "체크인 성공!" })}
+                          GUEST CHECK-IN SUCCESSFUL!
                         </div>
                         {result.txHash && (
                           <a
                             href={`https://testnet.monadexplorer.com/tx/${result.txHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-emerald-300 hover:text-emerald-200"
+                            className="flex items-center gap-1.5 text-xs text-emerald-300 hover:underline font-mono"
                           >
-                            Tx: {result.txHash.slice(0, 10)}...{result.txHash.slice(-8)}
-                            <ExternalLink className="h-3 w-3" />
+                            Tx Hash: {result.txHash.slice(0, 14)}...{result.txHash.slice(-8)}
+                            <ExternalLink className="h-3 w-3 opacity-70" />
                           </a>
                         )}
-                        <p className="text-xs text-slate-400">
-                          {tf({ id: "Escrow funds released to venue wallet on-chain.", en: "Escrow funds released to venue wallet on-chain.", ru: "Средства эскроу переведены на кошелёк venue.", ko: "에스크로 자금이 venue 지갑에 온체인으로 전송되었습니다." })}
+                        <p className="text-xs text-slate-400 font-light">
+                          Escrow deposit successfully released on-chain to venue treasury.
                         </p>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-rose-400">
-                        <AlertTriangle className="h-5 w-5" />
-                        <span className="text-sm">{result.error}</span>
+                      <div className="flex items-center gap-2 text-rose-300 font-medium text-xs">
+                        <AlertTriangle className="h-5 w-5 text-rose-400 shrink-0" />
+                        <span>{result.error}</span>
                       </div>
                     )}
                   </div>
@@ -141,21 +150,14 @@ const StaffCheckIn = () => {
             </Card>
           </Reveal>
 
-          {/* Quick Info */}
+          {/* Quick Notice */}
           <Reveal delay={100}>
-            <Card className="glass rounded-2xl border-white/10">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 text-slate-400 text-sm">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
-                  <p>
-                    {tf({
-                      id: "Hanya admin/owner wallet yang bisa check-in. Pastikan wallet kamu adalah contract owner.",
-                      en: "Only admin/owner wallet can check-in. Make sure your wallet is the contract owner.",
-                      ru: "Только кошелёк admin/owner может регистрировать. Убедитесь, что ваш кошелёк — владелец контракта.",
-                      ko: "관리자/오너 지갑만 체크인할 수 있습니다. 지갑이 컨트랙트 오너인지 확인하세요.",
-                    })}
-                  </p>
-                </div>
+            <Card className="glass rounded-2xl border border-white/10">
+              <CardContent className="p-5 flex items-center gap-3.5 text-xs text-slate-400 font-light">
+                <ShieldCheck className="h-5 w-5 text-amber-300 shrink-0" />
+                <p>
+                  Only authorized admin/owner wallets can trigger guest check-ins. Ensure your connected wallet address matches the deployed escrow owner.
+                </p>
               </CardContent>
             </Card>
           </Reveal>
@@ -163,6 +165,4 @@ const StaffCheckIn = () => {
       </section>
     </div>
   );
-};
-
-export default StaffCheckIn;
+}

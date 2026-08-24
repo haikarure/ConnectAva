@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { useAccount, useWriteContract, useReadContract } from "wagmi";
-import { parseUnits, formatUnits } from "viem";
+import { formatUnits } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { CONTRACT_ADDRESSES, BOOKING_ESCROW_ABI, DAYBED_TYPES } from "@/web3/contracts";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, Droplets, CheckCircle, ExternalLink } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
-// MockUSDT ABI (just approve)
 const ERC20_ABI = [
   {
     inputs: [
@@ -28,23 +27,32 @@ const ERC20_ABI = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [],
+    name: "faucet",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ] as const;
 
 interface Web3BookingButtonProps {
   daybedType: number;
   dateString: string;
+  autoSign?: boolean;
   onSuccess?: (bookingId: number, txHash: string) => void;
 }
 
 export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
   daybedType,
   dateString,
+  autoSign = false,
   onSuccess,
 }) => {
   const { address, isConnected } = useAccount();
-  const { writeContractAsync, isPending, isSuccess, data: txHash, error } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
   const { tf } = useLang();
-  const [step, setStep] = useState<"idle" | "approving" | "booking">("idle");
+  const [step, setStep] = useState<"idle" | "fauceting" | "approving" | "booking">("idle");
 
   // Read required deposit in USDT (6 decimals)
   const { data: depositUsdt } = useReadContract({
@@ -56,13 +64,28 @@ export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
   });
 
   // Read user USDT balance
-  const { data: usdtBalance } = useReadContract({
+  const { data: usdtBalance, refetch: refetchBalance } = useReadContract({
     address: CONTRACT_ADDRESSES.mockUSDT,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
+
+  const handleFaucet = async () => {
+    setStep("fauceting");
+    try {
+      await writeContractAsync({
+        address: CONTRACT_ADDRESSES.mockUSDT,
+        abi: ERC20_ABI,
+        functionName: "faucet",
+      });
+      refetchBalance();
+    } catch (err) {
+      console.error("Faucet claim failed:", err);
+    }
+    setStep("idle");
+  };
 
   const handleBooking = async () => {
     if (!depositUsdt || !dateString || !address) return;
@@ -86,7 +109,7 @@ export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
         abi: BOOKING_ESCROW_ABI,
         functionName: "createBooking",
         args: [daybedType, visitTimestamp, CONTRACT_ADDRESSES.mockUSDT],
-        value: 0n, // No native MON needed for USDT payments
+        value: 0n,
       });
 
       if (onSuccess) {
@@ -97,6 +120,14 @@ export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
     }
     setStep("idle");
   };
+
+  // Auto-trigger Rabby / Wallet popup when autoSign prop is true and balance is ready
+  React.useEffect(() => {
+    if (autoSign && isConnected && usdtBalance !== undefined && depositUsdt !== undefined && usdtBalance >= depositUsdt && step === "idle") {
+      console.log("[web3] Voice auto-sign triggered! Opening Rabby / Wallet signature popup...");
+      handleBooking();
+    }
+  }, [autoSign, isConnected, usdtBalance, depositUsdt]);
 
   if (!isConnected) {
     return (
@@ -121,31 +152,37 @@ export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Deposit info */}
-      <div className="flex items-center justify-between text-sm p-3 rounded-xl bg-white/5 border border-white/10">
+      <div className="flex items-center justify-between text-xs p-3 rounded-xl bg-slate-950/80 border border-white/10">
         <span className="text-slate-400">
-          {tf({ id: "Deposit Escrow", en: "Escrow Deposit", ru: "Депозит", ko: "에스크로 보증금" })} ({daybedName})
+          Escrow Deposit ({daybedName})
         </span>
-        <span className="text-amber-300 font-bold">{depositFormatted} USDT</span>
+        <span className="text-amber-300 font-bold font-mono">{depositFormatted} USDT</span>
       </div>
 
-      {/* Balance info */}
+      {/* Balance info & Direct Faucet Claim Button */}
       <div className="flex items-center justify-between text-xs px-1">
-        <span className="text-slate-500">Your USDT Balance</span>
-        <span className={hasEnoughBalance ? "text-emerald-400" : "text-rose-400"}>
+        <span className="text-slate-400">Your USDT Balance</span>
+        <span className={hasEnoughBalance ? "text-amber-300 font-bold font-mono" : "text-rose-400 font-bold font-mono"}>
           {balanceFormatted} USDT
         </span>
       </div>
 
-      {/* Insufficient balance warning */}
-      {!hasEnoughBalance && depositUsdt && (
-        <div className="text-xs text-rose-400 p-2 rounded-lg bg-rose-400/10 border border-rose-400/20">
-          {tf({
-            id: "USDT tidak cukup. Klaim gratis dari faucet di atas.",
-            en: "Insufficient USDT. Claim free from faucet above.",
-            ru: "Недостаточно USDT. Получите бесплатно из faucet выше.",
-            ko: "USDT 부족. 위 faucet에서 무료로 받으세요.",
-          })}
-        </div>
+      {/* Claim Free Faucet Button if low balance */}
+      {!hasEnoughBalance && (
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={step === "fauceting"}
+          onClick={handleFaucet}
+          className="w-full rounded-xl border-amber-400/40 text-amber-300 hover:bg-amber-400/10 text-xs font-semibold py-2 flex items-center justify-center gap-2"
+        >
+          {step === "fauceting" ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Droplets className="h-3.5 w-3.5 text-amber-300" />
+          )}
+          Claim 1,000 Free Mock USDT (Faucet)
+        </Button>
       )}
 
       {/* Book button */}
@@ -154,56 +191,20 @@ export const Web3BookingButton: React.FC<Web3BookingButtonProps> = ({
         size="lg"
         disabled={isPending || !depositUsdt || !hasEnoughBalance}
         onClick={handleBooking}
-        className="w-full rounded-full py-4 gold-gradient text-black font-bold text-base"
+        className="w-full rounded-full py-3.5 gold-gradient text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-all"
       >
         {isPending ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin" />
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
             {step === "approving"
-              ? tf({ id: "Approving USDT...", en: "Approving USDT...", ru: "Одобрение USDT...", ko: "USDT 승인 중..." })
-              : tf({ id: "Booking di Monad...", en: "Booking on Monad...", ru: "Бронирование в Monad...", ko: "Monad에서 예약 중..." })
+              ? "Approving USDT..."
+              : "Booking on Monad..."
             }
           </span>
         ) : (
-          tf({
-            id: `Bayar ${depositFormatted} USDT`,
-            en: `Pay ${depositFormatted} USDT`,
-            ru: `Оплатить ${depositFormatted} USDT`,
-            ko: `${depositFormatted} USDT 지불`,
-          })
+          `PAY ${depositFormatted} USDT DEPOSIT`
         )}
       </Button>
-
-      {/* Success message */}
-      {isSuccess && txHash && (
-        <div className="flex flex-col gap-2 p-3 rounded-xl bg-emerald-400/10 border border-emerald-400/20">
-          <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
-            <CheckCircle className="h-4 w-4" />
-            {tf({
-              id: "Reservasi berhasil di-escrow di Monad Testnet!",
-              en: "Reservation escrowed on Monad Testnet!",
-              ru: "Бронирование заэскроуировано в Monad Testnet!",
-              ko: "Monad 테스트넷에서 예약이 에스크로되었습니다!",
-            })}
-          </div>
-          <a
-            href={`https://testnet.monadexplorer.com/tx/${txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-emerald-300 hover:text-emerald-200"
-          >
-            {txHash.slice(0, 10)}...{txHash.slice(-8)}
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-      )}
-
-      {/* Error message */}
-      {error && (
-        <div className="text-rose-400 text-xs p-3 rounded-xl bg-rose-400/10 border border-rose-400/20">
-          Error: {error.message?.slice(0, 120)}
-        </div>
-      )}
     </div>
   );
 };

@@ -129,8 +129,8 @@
     --champagne: 40 60% 85%;
     --amber: 35 95% 55%;
     --bronze: 30 45% 38%;
-    --bg-deep: 222 47% 6%;
-    --bg-elev: 222 40% 10%;
+    --bg-deep: 222 47% 9%;
+    --bg-elev: 222 40% 13%;
   }
 
   html {
@@ -175,6 +175,18 @@
     border: 1px solid hsl(210 40% 96% / 0.1);
   }
 
+  .glass-dropdown {
+    background: linear-gradient(
+      135deg,
+      rgba(15, 23, 42, 0.45),
+      rgba(15, 23, 42, 0.25)
+    );
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.05);
+  }
+
   /* Gold gradient text */
   .text-gold {
     background: linear-gradient(135deg, hsl(var(--gold-soft)), hsl(var(--gold)));
@@ -201,16 +213,18 @@
       radial-gradient(70% 60% at 50% 100%, hsl(222 60% 20% / 0.5), transparent 70%);
   }
 
-  /* Glow border on hover */
+  /* Glow border on hover - Snappy 250ms Hardware Accelerated */
   .glow-card {
-    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.45s ease, box-shadow 0.45s ease, background 0.45s ease;
+    will-change: transform, border-color, box-shadow;
+    transform: translateZ(0);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.25s ease-out, box-shadow 0.25s ease-out, background 0.25s ease-out;
     border: 1px solid hsl(210 40% 96% / 0.08);
   }
   .glow-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px) translateZ(0);
     border-color: hsl(var(--gold) / 0.45);
-    box-shadow: 0 24px 60px -20px hsl(var(--gold) / 0.3),
+    box-shadow: 0 20px 40px -15px hsl(var(--gold) / 0.3),
       0 0 0 1px hsl(var(--gold-glow) / 0.2);
   }
 
@@ -228,13 +242,29 @@
 /* Reveal-on-scroll wrapper */
 .reveal {
   opacity: 0;
-  transform: translateY(36px);
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(42px) scale(0.97);
+  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 .reveal.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+
+@keyframes fadeInUpStagger {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUpStagger 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Shimmer sweep for premium accents */

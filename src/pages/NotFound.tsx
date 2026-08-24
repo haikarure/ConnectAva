@@ -13,8 +13,8 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[hsl(222_47%_6%)] ambient relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(222_47%_6%/0.6)] to-[hsl(222_47%_6%)]" />
+    <div className="min-h-screen flex items-center justify-center bg-[hsl(222_47%_9%)] ambient relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(222_47%_6%/0.6)] to-[hsl(222_47%_9%)]" />
       <div className="relative z-10 text-center px-6">
         <p className="font-cinzel text-8xl md:text-9xl font-bold text-glow-gold mb-2">404</p>
         <h1 className="text-2xl md:text-3xl font-semibold text-white mb-3">

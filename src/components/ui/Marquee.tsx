@@ -20,8 +20,8 @@ export function Marquee({ children, className, reverse }: MarqueeProps) {
           {children}
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[hsl(222_47%_6%)] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[hsl(222_47%_6%)] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[hsl(222_47%_9%)] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[hsl(222_47%_9%)] to-transparent" />
     </div>
   );
 }

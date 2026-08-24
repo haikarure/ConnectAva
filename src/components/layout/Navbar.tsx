@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ASSETS, CONTACT } from "@/data/whiterock";
 import { useLang, Lang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   Menu,
   X,
@@ -19,66 +20,41 @@ import {
   CloudSun,
   ListChecks,
   QrCode,
+  Handshake,
+  Camera,
+  Mountain,
+  Heart,
+  Building2,
+  Users,
 } from "lucide-react";
 
+// Mirror persis top-nav whiterockbali.com (scrape 2026-08):
+// Entertainment, Daybed & Suites, Menu, Mice & Wedding, Spa & Wellness,
+// Merchandise, Experiences, News (dropdown), NYE 2026, Eng (dropdown).
 const NAV: {
   label: { id: string; en: string; ru?: string; ko?: string };
-  to: string;
-  children?: { label: { id: string; en: string; ru?: string; ko?: string }; to: string; icon?: any }[];
+  to?: string;
+  href?: string;
+  children?: { label: { id: string; en: string; ru?: string; ko?: string }; to?: string; href?: string; icon?: any }[];
 }[] = [
+  { label: { id: "Entertainment", en: "Entertainment", ru: "Развлечения", ko: "엔터테인먼트" }, to: "/entertainment" },
+  { label: { id: "Daybed & Suite", en: "Daybed & Suites", ru: "Шезлонги и люксы", ko: "데이베드 및 스위트" }, to: "/#daybeds" },
+  { label: { id: "Menu", en: "Menu", ru: "Меню", ko: "메뉴" }, to: "/dining" },
+  { label: { id: "Mice & Wedding", en: "Mice & Wedding", ru: "MICE и свадьба", ko: "MICE 및 웨딩" }, to: "/weddings-mice" },
+  { label: { id: "Spa & Wellness", en: "Spa & Wellness", ru: "Спа и велнес", ko: "스па и велнес" }, to: "/spa-wellness" },
+  { label: { id: "Merchandise", en: "Merchandise", ru: "Мерч", ko: "머천дайз" }, href: "https://shops.whiterockbali.com/" },
+  { label: { id: "Experiences", en: "Experiences", ru: "Впечатления", ko: "체험" }, to: "/experiences" },
   {
-    label: { id: "Daybeds & Suite", en: "Daybeds & Suites", ru: "Шезлонги и люксы", ko: "데이베드 및 스위트" },
-    to: "/daybeds-suites",
+    label: { id: "News", en: "News", ru: "Новости", ko: "뉴스" },
     children: [
-      { label: { id: "Semua Daybed", en: "All Daybeds", ru: "Все шезлонги", ko: "모든 데이베드" }, to: "/daybeds-suites", icon: Bed },
-      { label: { id: "VIP Cabana", en: "VIP Cabana", ru: "VIP кабана", ko: "VIP 카바나" }, to: "/daybeds-suites#vip", icon: Sparkles },
-      { label: { id: "Reservasi", en: "Reserve", ru: "Забронировать", ko: "예약" }, to: "/booking", icon: CalendarHeart },
-      { label: { id: "Reservasi Saya", en: "My Bookings", ru: "Мои бронирования", ko: "내 예약" }, to: "/my-bookings", icon: ListChecks },
-    ],
-  },
-  {
-    label: { id: "Dining", en: "Dining", ru: "Рестораны", ko: "다이닝" },
-    to: "/dining",
-    children: [
-      { label: { id: "White Rock Kitchen", en: "White Rock Kitchen", ru: "White Rock Kitchen", ko: "White Rock Kitchen" }, to: "/dining", icon: Utensils },
-      { label: { id: "Cliffside Bar", en: "Cliffside Bar", ru: "Клифсайд бар", ko: "클리프사이드 바" }, to: "/dining#bar", icon: Waves },
-    ],
-  },
-  {
-    label: { id: "Experiences", en: "Experiences", ru: "Впечатления", ko: "체험" },
-    to: "/experiences",
-    children: [
-      { label: { id: "Semua Aktivitas", en: "All Activities", ru: "Все активности", ko: "모든 액티비티" }, to: "/experiences", icon: Sparkles },
-      { label: { id: "DJ & Events", en: "DJ & Events", ru: "DJ и события", ko: "DJ 및 이벤트" }, to: "/events", icon: Music },
-      { label: { id: "NYE 2026", en: "NYE 2026", ru: "NYE 2026", ko: "NYE 2026" }, to: "/nye", icon: CalendarHeart },
-    ],
-  },
-  {
-    label: { id: "Wellness", en: "Wellness", ru: "Велнес", ko: "웰니스" },
-    to: "/spa-wellness",
-    children: [
-      { label: { id: "Spa & Wellness", en: "Spa & Wellness", ru: "Спа и велнес", ko: "스파 및 웰니스" }, to: "/spa-wellness", icon: Sparkles },
-      { label: { id: "Fitness Center", en: "Fitness Center", ru: "Фитнес-центр", ko: "피트니스 센터" }, to: "/fitness-center", icon: Waves },
-    ],
-  },
-  {
-    label: { id: "Events & MICE", en: "Events & MICE", ru: "События и MICE", ko: "이벤트 및 MICE" },
-    to: "/weddings-mice",
-    children: [
-      { label: { id: "Weddings", en: "Weddings", ru: "Свадьбы", ko: "웨딩" }, to: "/weddings-mice#weddings", icon: CalendarHeart },
-      { label: { id: "MICE / Corporate", en: "MICE / Corporate", ru: "MICE / корпоратив", ko: "MICE / 기업 행사" }, to: "/weddings-mice#mice", icon: Sparkles },
-      { label: { id: "Merchandise", en: "Merchandise", ru: "Мерч", ko: "머천다이즈" }, to: "/merch", icon: Shirt },
-    ],
-  },
-  {
-    label: { id: "Info", en: "Info", ru: "Информация", ko: "정보" },
-    to: "/live-weather",
-    children: [
-      { label: { id: "Live Weather & Tide", en: "Live Weather & Tide", ru: "Погода и приливы в реальном времени", ko: "실시간 날씨 및 조수" }, to: "/live-weather", icon: CloudSun },
-      { label: { id: "Kontak", en: "Contact", ru: "Контакты", ko: "연락처" }, to: "/contact", icon: MessageCircle },
-      { label: { id: "FAQ", en: "FAQ", ru: "Часто задаваемые вопросы", ko: "자주 묻는 질문" }, to: "/faq", icon: Globe },
-      { label: { id: "Karir", en: "Careers", ru: "Карьера", ko: "채용" }, to: "/careers", icon: Sparkles },
-      { label: { id: "Staff Check-In", en: "Staff Check-In", ru: "Регистрация staff", ko: "스태프 체크인" }, to: "/staff-checkin", icon: QrCode },
+      { label: { id: "Special Offers", en: "Special Offers", ru: "Спецпредложения", ko: "스페셜 오퍼" }, to: "/special-offers", icon: Sparkles },
+      { label: { id: "Partnerships", en: "Partnerships", ru: "Партнерства", ko: "파트너십" }, to: "/partnerships", icon: Handshake },
+      { label: { id: "Media & Press", en: "Media & Press", ru: "СМИ и пресса", ko: "미디어 & 프레스" }, to: "/media-coverage", icon: Camera },
+      { label: { id: "Past Events", en: "Past Events", ru: "Прошедшие события", ko: "지난 이벤트" }, to: "/past-events", icon: Music },
+      { label: { id: "Bali Guide", en: "Bali Guide", ru: "Гид по Bali", ko: "발리 가이드" }, to: "/bali-guide", icon: Mountain },
+      { label: { id: "Live Weather & Tide Chart", en: "Live Weather & Tide Chart", ru: "Погода и приливы в реальном времени", ko: "실시간 날씨 및 조수" }, to: "/live-weather", icon: CloudSun },
+      { label: { id: "My Web3 Bookings", en: "My Web3 Bookings", ru: "Мои бронирования", ko: "내 웹3 예약" }, to: "/my-bookings", icon: ListChecks },
+      { label: { id: "Staff Check-In", en: "Staff Check-In", ru: "Чек-ин персонала", ko: "직원 체크인" }, to: "/staff-checkin", icon: QrCode },
     ],
   },
 ];
@@ -90,115 +66,214 @@ const LANGS: { code: Lang; label: string }[] = [
   { code: "ko", label: "KO" },
 ];
 
-export function Navbar() {
-  const { lang, setLang, currency, tf } = useLang();
+export const Navbar = () => {
+  const { lang, setLang, tf } = useLang();
+  const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const location = useLocation();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-    setActiveMenu(null);
-  }, [location.pathname]);
+  const isItemActive = (item: (typeof NAV)[0]) => {
+    if (item.to) {
+      if (item.to.includes("#")) {
+        const [path, hash] = item.to.split("#");
+        const matchPath = path === "" || path === "/";
+        return (matchPath && location.pathname === "/") && location.hash === `#${hash}`;
+      }
+      if (item.to === "/dining" || item.to === "/menu") {
+        return location.pathname === "/dining" || location.pathname === "/menu";
+      }
+      return location.pathname === item.to || location.pathname.startsWith(item.to + "/");
+    }
+    if (item.children) {
+      return item.children.some((c) => c.to && (location.pathname === c.to || location.pathname.startsWith(c.to + "/")));
+    }
+    return false;
+  };
 
   return (
     <header
       className={cn(
-        "fixed top-0 inset-x-0 z-50 transition-[background-color,border-color,box-shadow] duration-300",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         scrolled
-          ? "bg-[hsl(222_47%_5%/0.9)] border-b border-amber-300/15 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-xl"
-          : "bg-transparent border-b border-transparent"
+          ? "bg-slate-950/85 backdrop-blur-md border-b border-white/10 py-3 shadow-2xl"
+          : "bg-gradient-to-b from-slate-950/90 via-slate-950/40 to-transparent py-5"
       )}
     >
-      <div className="container mx-auto px-5 md:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="container mx-auto px-4 md:px-8">
+        <div className="flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <img src={ASSETS.logoLight} alt="White Rock Bali" className="h-9 md:h-11 w-auto object-contain drop-shadow" />
-            <span className="hidden lg:block text-[10px] uppercase tracking-[0.3em] text-amber-300/80 font-semibold border-l border-white/15 pl-3">
-              {tf({ id: "Melasti Beach", en: "Melasti Beach", ru: "Пляж Меласти", ko: "멜라스티 비치" })}
-            </span>
+          <Link to="/" className="flex items-center gap-2 group shrink-0">
+            <img
+              src="/assets/whiterock/logo-light.png"
+              alt="White Rock Beach Club"
+              className="h-9 md:h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+            />
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {NAV.map((item) => (
-              <div
-                key={item.to}
-                className="relative"
-                onMouseEnter={() => setActiveMenu(item.to)}
-                onMouseLeave={() => setActiveMenu(null)}
-              >
-                <Link
-                  to={item.to}
-                  className={cn(
-                    "flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                    location.pathname.startsWith(item.to)
-                      ? "text-amber-300"
-                      : "text-slate-200/80 hover:text-white"
-                  )}
-                >
-                  {tf(item.label)}
-                  {item.children && <ChevronDown className="h-3.5 w-3.5 opacity-60" />}
-                </Link>
+          {/* Desktop Nav Items */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {NAV.map((item) => {
+              const hasChild = !!(item.children && item.children.length);
+              const isActive = isItemActive(item);
 
-                {item.children && activeMenu === item.to && (
-                  <div className="absolute left-0 top-full pt-3 w-64">
-                    <div className="glass-strong rounded-2xl p-2 shadow-2xl border border-white/10">
-                      {item.children.map((c) => {
-                        const Icon = c.icon;
-                        return (
-                          <Link
-                            key={c.to + c.label.en}
-                            to={c.to}
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-200/80 hover:bg-white/5 hover:text-amber-300 transition-colors"
-                          >
-                            {Icon && <Icon className="h-4 w-4 text-amber-300/70" />}
-                            {tf(c.label)}
-                          </Link>
-                        );
-                      })}
-                    </div>
+              if (hasChild) {
+                return (
+                  <div
+                    key={item.label.en}
+                    className="relative group/parent"
+                    onMouseEnter={() => setActiveMenu(item.label.en)}
+                    onMouseLeave={() => setActiveMenu(null)}
+                  >
+                    <button
+                      className={cn(
+                        "flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors relative",
+                        isActive || activeMenu === item.label.en ? "text-amber-300 font-bold" : "text-slate-200/80 hover:text-white"
+                      )}
+                    >
+                      <span className="relative">
+                        {tf(item.label)}
+                        <span
+                          className={cn(
+                            "absolute left-0 -bottom-1 h-[2.5px] bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.8)] transition-all duration-300 ease-out rounded-full",
+                            isActive ? "w-full" : activeMenu === item.label.en ? "w-full" : "w-0 group-hover/parent:w-full"
+                          )}
+                        />
+                      </span>
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    </button>
+                    {activeMenu === item.label.en && (
+                      <div className="absolute left-3.5 top-full pt-2 min-w-[240px]">
+                        <div className="py-2 space-y-2.5 glass-dropdown rounded-2xl p-4 border border-white/10 shadow-2xl">
+                          {item.children!.map((c) => {
+                            const Icon = c.icon;
+                            const isChildActive = c.to && (location.pathname === c.to || location.pathname.startsWith(c.to + "/"));
+                            return (
+                              <div key={c.label.en} className="relative group/nested">
+                                {c.href ? (
+                                  <a
+                                    href={c.href}
+                                    target="_self"
+                                    className="flex items-center gap-2.5 py-1 text-sm text-slate-200/90 hover:text-amber-300 transition-colors w-fit"
+                                  >
+                                    {Icon && <Icon className="h-4 w-4 text-amber-300/80 group-hover/nested:text-amber-300 transition-colors" />}
+                                    <span className="relative drop-shadow">
+                                      {tf(c.label)}
+                                      <span className="absolute left-0 -bottom-0.5 w-0 h-[2px] bg-amber-300 transition-all duration-300 ease-out group-hover/nested:w-full" />
+                                    </span>
+                                  </a>
+                                ) : (
+                                  <Link
+                                    to={c.to!}
+                                    className={cn(
+                                      "flex items-center gap-2.5 py-1 text-sm transition-colors w-fit",
+                                      isChildActive ? "text-amber-300 font-bold" : "text-slate-200/90 hover:text-amber-300"
+                                    )}
+                                  >
+                                    {Icon && <Icon className="h-4 w-4 text-amber-300/80 group-hover/nested:text-amber-300 transition-colors" />}
+                                    <span className="relative drop-shadow">
+                                      {tf(c.label)}
+                                      <span
+                                        className={cn(
+                                          "absolute left-0 -bottom-0.5 h-[2px] bg-amber-300 transition-all duration-300 ease-out",
+                                          isChildActive ? "w-full" : "w-0 group-hover/nested:w-full"
+                                        )}
+                                      />
+                                    </span>
+                                  </Link>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              }
+              return (
+                <div key={item.label.en} className="relative group/leaf">
+                  {item.href ? (
+                    <a
+                      href={item.href}
+                      target="_self"
+                      className={cn(
+                        "flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors relative",
+                        isActive ? "text-amber-300 font-bold" : "text-slate-200/80 hover:text-white"
+                      )}
+                    >
+                      <span className="relative">
+                        {tf(item.label)}
+                        <span
+                          className={cn(
+                            "absolute left-0 -bottom-1 h-[2.5px] bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.8)] transition-all duration-300 ease-out rounded-full",
+                            isActive ? "w-full" : "w-0 group-hover/leaf:w-full"
+                          )}
+                        />
+                      </span>
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.to!}
+                      className={cn(
+                        "flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors relative",
+                        isActive ? "text-amber-300 font-bold" : "text-slate-200/80 hover:text-white"
+                      )}
+                    >
+                      <span className="relative">
+                        {tf(item.label)}
+                        <span
+                          className={cn(
+                            "absolute left-0 -bottom-1 h-[2.5px] bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.8)] transition-all duration-300 ease-out rounded-full",
+                            isActive ? "w-full" : "w-0 group-hover/leaf:w-full"
+                          )}
+                        />
+                      </span>
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </nav>
 
-          {/* Right controls */}
+          {/* Right controls: Web3 Connect Wallet Button + Lang */}
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Language dropdown — shows active lang, reveals others on hover */}
+            {/* RainbowKit Connect Button */}
+            <div className="hidden sm:block">
+              <ConnectButton chainStatus="icon" showBalance={false} />
+            </div>
+
+            {/* Language dropdown */}
             <div className="hidden md:block relative group">
               <button
-                className="flex items-center gap-1.5 glass rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-100 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:text-amber-300 transition-colors relative group/lang"
                 aria-label="Select language"
               >
-                {LANGS.find((l) => l.code === lang)?.label ?? "EN"}
+                <span className="relative">
+                  {LANGS.find((l) => l.code === lang)?.label ?? "EN"}
+                  <span className="absolute left-0 -bottom-0.5 w-0 h-[2px] bg-amber-300 transition-all duration-300 group-hover/lang:w-full" />
+                </span>
                 <ChevronDown className="h-3.5 w-3.5 text-amber-300/70" />
               </button>
-              <div className="absolute right-0 top-full pt-2 w-32 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="glass-strong rounded-xl p-1 shadow-2xl border border-white/10">
+              <div className="absolute left-0 top-full pt-2 min-w-[70px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-1 space-y-1 glass-dropdown rounded-xl p-2 border border-white/10 shadow-xl">
                   {LANGS.map((l) => (
                     <button
                       key={l.code}
                       onClick={() => setLang(l.code)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg transition-colors",
-                        lang === l.code
-                          ? "gold-gradient text-black"
-                          : "text-slate-300 hover:bg-white/5 hover:text-white"
+                        "w-full flex items-center justify-between py-1 px-2 text-xs font-semibold transition-colors relative group/item",
+                        lang === l.code ? "text-amber-300 font-bold" : "text-slate-300 hover:text-white"
                       )}
                     >
-                      {l.label}
+                      <span>{l.label}</span>
                     </button>
                   ))}
                 </div>
@@ -218,75 +293,45 @@ export function Navbar() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="lg:hidden glass-strong border-t border-white/10 max-h-[80vh] overflow-y-auto">
-          <div className="container mx-auto px-5 py-4 space-y-1">
-            <div className="mb-3">
-              <button
-                onClick={() => setLangOpen((v) => !v)}
-                className="flex items-center justify-between w-full glass rounded-xl px-4 py-3 text-sm font-semibold text-slate-100"
-              >
-                <span>
-                  {LANGS.find((l) => l.code === lang)?.label ?? "EN"}
-                  <span className="text-slate-400 font-normal ml-2">· {currency}</span>
-                </span>
-                <ChevronDown className={cn("h-4 w-4 text-amber-300/70 transition-transform", langOpen && "rotate-180")} />
-              </button>
-              {langOpen && (
-                <div className="grid grid-cols-2 gap-1 mt-1 px-1">
-                  {LANGS.map((l) => (
-                    <button
-                      key={l.code}
-                      onClick={() => {
-                        setLang(l.code);
-                        setLangOpen(false);
-                      }}
-                      className={cn(
-                        "px-3 py-2 text-xs font-semibold rounded-lg transition-colors",
-                        lang === l.code ? "gold-gradient text-black" : "text-slate-300 hover:bg-white/5"
-                      )}
-                    >
-                      {l.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+        <div className="lg:hidden glass-dropdown border-t border-white/10 max-h-[80vh] overflow-y-auto">
+          <div className="container mx-auto px-5 py-4 space-y-3">
+            {/* Mobile Wallet Connect */}
+            <div className="pb-2 flex justify-center">
+              <ConnectButton chainStatus="icon" showBalance={false} />
             </div>
 
             {NAV.map((item) => (
-              <div key={item.to} className="py-1">
-                <Link
-                  to={item.to}
-                  className="block px-3 py-2.5 rounded-xl text-base font-medium text-white hover:bg-white/5"
-                >
-                  {tf(item.label)}
-                </Link>
-                {item.children && (
-                  <div className="pl-4 border-l border-white/10 ml-3 mt-1 space-y-0.5">
+              <div key={item.label.en}>
+                {item.children ? (
+                  <div className="space-y-1">
+                    <div className="text-xs uppercase tracking-wider text-amber-300 font-bold px-2 pt-2">
+                      {tf(item.label)}
+                    </div>
                     {item.children.map((c) => (
                       <Link
-                        key={c.to + c.label.en}
-                        to={c.to}
-                        className="block px-3 py-2 rounded-lg text-sm text-slate-300/80 hover:text-amber-300"
+                        key={c.label.en}
+                        to={c.to ?? "#"}
+                        onClick={() => setOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-300 hover:text-amber-300"
                       >
                         {tf(c.label)}
                       </Link>
                     ))}
                   </div>
+                ) : (
+                  <Link
+                    to={item.to ?? "#"}
+                    onClick={() => setOpen(false)}
+                    className="block px-2 py-2 text-sm font-semibold text-slate-200 hover:text-amber-300"
+                  >
+                    {tf(item.label)}
+                  </Link>
                 )}
               </div>
             ))}
-
-            <a
-              href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noreferrer"
-              className="block text-center text-sm text-slate-400 py-2"
-            >
-              WhatsApp: {CONTACT.whatsapp}
-            </a>
           </div>
         </div>
       )}
     </header>
   );
-}
+};

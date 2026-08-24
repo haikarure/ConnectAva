@@ -1,69 +1,51 @@
-# Welcome to your Lovable project
+# White Rock Beach Club Bali — ConnectAva Web3 AI Concierge
 
-## Project info
+> **Luxury Beach Club Experience powered by Monad Testnet Smart Contracts & Sarah AI Avatar.**
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🌊 Overview
 
-**Use Lovable**
+White Rock Beach Club Bali is the premier luxury destination on Melasti Beach, Ungasan, Uluwatu. This project integrates full-stack Web3 smart contracts (Monad Testnet) and LiveKit AI voice concierge (Sarah) for daybed reservations, VIP membership NFT passes, and seamless on-chain guest check-ins.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🚀 Key Features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+* **Sarah AI Voice Concierge**: Real-time voice interaction & LiveKit webRTC AI streaming for instant venue information, bookings, and navigation.
+* **Tiered NFT Pass (`WhiteRockPass.sol`)**: ERC-721 membership passes granting up to 20% discounts on minimum spend.
+* **Escrow Booking (`BookingEscrow.sol`)**: On-chain daybed deposits with 24-hour full refund guarantee.
+* **Staff Check-In Terminal**: QR Code scanning & on-chain deposit settlement for venue staff.
+* **1:1 Mirror Layouts**: High-fidelity UI for Daybeds, Dining, Spa & Wellness, MICE & Weddings, and Experiences.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## 🛠️ Tech Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+* **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Shadcn UI, Framer Motion.
+* **Web3 Integration**: RainbowKit, Wagmi v2, Viem, Monad Testnet (Chain ID 10143).
+* **Smart Contracts**: Solidity 0.8.20, Foundry, OpenZeppelin v5, Certora Formal Verification.
+* **AI Concierge**: LiveKit WebRTC, Tavus AI Avatar.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+---
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 💻 Getting Started
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+# Install dependencies
+npm install
+
+# Start local dev server
 npm run dev
+
+# Build for production
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📜 Deployed Smart Contracts (Monad Testnet)
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e9da8894-50c8-4589-bc20-ce2de6c30ea5) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+* **WhiteRockPass (ERC-721)**: `0x5Bb5A242A2Db2a40592407676FcfcEe94ce7342E`
+* **BookingEscrow**: `0x7FB626bcF2722f45e25EEd445385e2Da34B1077e`
+* **MockUSDT**: `0x53f42a3edfca4927f9754b92b458323c77d6a4fd`

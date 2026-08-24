@@ -10,7 +10,7 @@ export default function Faq() {
   const { tf } = useLang();
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)]">
       <PageHero
         bgImage="/assets/whiterock/aerial.jpg"
         height="short"

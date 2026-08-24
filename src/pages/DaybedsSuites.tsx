@@ -5,17 +5,17 @@ import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PageHero } from "@/components/layout/PageHero";
 import { useLang } from "@/lib/i18n";
-import { DAYBEDS } from "@/data/whiterock";
-import { Check, Users, ArrowRight, Sparkles } from "lucide-react";
+import { DAYBEDS, ASSETS } from "@/data/whiterock";
+import { Users, ArrowRight, Sparkles } from "lucide-react";
 
 export default function DaybedsSuites() {
   const { tf, formatPrice } = useLang();
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[hsl(222_47%_6%)]">
+    <div className="bg-[hsl(222_47%_9%)]">
       <PageHero
-        video
+        bgImage={ASSETS.lagoonBed}
         eyebrow={tf({ id: "Daybeds & Suites", en: "Daybeds & Suites", ru: "Шезлонги и люксы", ko: "데이베드 & 스위트" })}
         title={tf({ id: "Lounging Mewah", en: "Luxe Lounging", ru: "Роскошный отдых", ko: "럭셔리 라운징" })}
         subtitle={tf({
@@ -53,14 +53,14 @@ export default function DaybedsSuites() {
                         <div className="text-amber-300 font-bold">{formatPrice(d.minSpendIdr)}</div>
                       </div>
                     </div>
-                    <p className="text-slate-300/80 font-light mt-3 mb-5 leading-relaxed">{tf(d.desc)}</p>
-                    <ul className="space-y-2 mb-6">
-                      {d.features.map((f, k) => (
-                        <li key={k} className="flex items-center gap-2 text-sm text-slate-300">
-                          <Check className="h-4 w-4 text-amber-300 shrink-0" /> {tf(f)}
-                        </li>
-                      ))}
-                    </ul>
+                    <p className="text-slate-300/80 font-light mt-3 mb-5 leading-relaxed">
+                      {tf({
+                        id: "Min. spend berlaku untuk F&B — tanya Sarah untuk penawaran rombongan & availability.",
+                        en: "Min. spend applies to F&B — ask Sarah for group deals & availability.",
+                        ru: "Мин. расход действует для F&B — спросите Sarah о групповых предложениях и наличии.",
+                        ko: "최소 이용은 F&B에 적용됩니다 — 단체 할인과 예약 가능 여부는 Sarah에게 문의하세요.",
+                      })}
+                    </p>
                     <Button variant="luxury" className="w-full" onClick={() => navigate("/booking")}>
                       {tf({ id: "Reservasi Sekarang", en: "Reserve Now", ru: "Забронировать сейчас", ko: "지금 예약" })} <ArrowRight className="h-4 w-4" />
                     </Button>

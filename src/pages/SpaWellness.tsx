@@ -1,170 +1,379 @@
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { PageHero } from "@/components/layout/PageHero";
 import { Reveal } from "@/components/ui/Reveal";
 import { useLang } from "@/lib/i18n";
-import { CONTACT } from "@/data/whiterock";
+import { CONTACT, SPA_TREATMENTS } from "@/data/whiterock";
 import {
   Clock,
   Sparkles,
-  Waves,
-  Flower2,
-  Heart,
   Phone,
   Calendar,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 
-const Treatments = () => {
-  const { tf } = useLang();
+const SPA_SLIDES = [
+  { id: 1, src: "/assets/whiterock/spa-1.jpg", alt: "White Rock Spa Essential Oils" },
+  { id: 2, src: "/assets/whiterock/spa-2.jpg", alt: "White Rock Spa Suite Bed" },
+  { id: 3, src: "/assets/whiterock/spa-3.jpg", alt: "White Rock Spa Amenities & Slippers" },
+  { id: 4, src: "/assets/whiterock/spa-4.jpg", alt: "White Rock Spa Salt Bowl Therapy" },
+  { id: 5, src: "/assets/whiterock/spa-5.jpg", alt: "White Rock Spa Treatment Room" },
+  { id: 6, src: "/assets/whiterock/spa-6.jpg", alt: "White Rock Spa Botanical Bath" },
+  { id: 7, src: "/assets/whiterock/spa-hero.jpg", alt: "White Rock Spa Cliffside Suite" },
+  { id: 8, src: "/assets/whiterock/spa-room.jpg", alt: "White Rock Spa Inner Sanctuary" },
+  { id: 9, src: "/assets/whiterock/spa-treatment.jpg", alt: "White Rock Signature Spa Therapy" },
+  { id: 10, src: "/assets/whiterock/spa-daybed.jpg", alt: "White Rock Spa Relaxing Daybed" },
+];
+
+export default function SpaWellness() {
+  const { tf, onRequest } = useLang();
   const navigate = useNavigate();
 
-  const treatments = [
-    { name: "Signature Relaxation Massage", nameId: "Pijat Relaksasi Signature", duration: "60 mins", price: "IDR 2.8M", desc: "Full-body therapeutic massage with aromatic oils", descId: "Pijat terapi seluruh tubuh dengan minyak aromaterapi" },
-    { name: "Deep Tissue Massage", nameId: "Pijat Deep Tissue", duration: "90 mins", price: "IDR 3.7M", desc: "Intensive muscle therapy for tension relief", descId: "Terapi otot intensif untuk meredakan ketegangan" },
-    { name: "Couples Spa Package", nameId: "Paket Spa Pasangan", duration: "120 mins", price: "IDR 7M", desc: "Side-by-side massage with champagne service", descId: "Pijat berdampingan dengan layanan champagne" },
-    { name: "Rejuvenating Facial", nameId: "Facial Menyegarkan", duration: "75 mins", price: "IDR 2.5M", desc: "Customized facial treatment for all skin types", descId: "Perawatan wajah sesuai jenis kulit" },
-    { name: "Hot Stone Therapy", nameId: "Terapi Batu Hangat", duration: "90 mins", price: "IDR 3.4M", desc: "Heated volcanic stones for deep muscle relaxation", descId: "Batu vulkanik panas untuk relaksasi otot dalam" },
-    { name: "Aromatherapy Session", nameId: "Sesi Aromaterapi", duration: "60 mins", price: "IDR 2.6M", desc: "Essential oil therapy for mind and body wellness", descId: "Terapi minyak esensial untuk pikiran & tubuh" },
-  ];
+  // Carousel Index State & Hover Control
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const facilities = [
-    { icon: Waves, name: "Infinity Pool", nameId: "Kolam Infinity", desc: "Temperature-controlled pool with ocean views", descId: "Kolam bersuhu terkontrol dengan pemandangan laut" },
-    { icon: Sparkles, name: "Steam Room", nameId: "Ruang Uap", desc: "Eucalyptus-infused steam for detoxification", descId: "Uap eukaliptus untuk detoksifikasi" },
-    { icon: Flower2, name: "Meditation Garden", nameId: "Taman Meditasi", desc: "Tranquil outdoor space for mindfulness", descId: "Ruang terbuka tenang untuk ketenangan pikiran" },
-    { icon: Heart, name: "Wellness Lounge", nameId: "Lounge Kesehatan", desc: "Relaxation area with herbal teas", descId: "Area relaksasi dengan teh herbal" },
-  ];
+  // Form State
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    nationality: "Indonesia",
+    phone: "",
+    totalGuests: "1",
+    treatmentDate: "",
+    treatmentTime: "11:00",
+    treatmentChoice: "",
+    orderNotes: "",
+  });
+
+  // Autoplay carousel slider every 3 seconds (Infinite Seamless Loop)
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % SPA_SLIDES.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % SPA_SLIDES.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + SPA_SLIDES.length) % SPA_SLIDES.length);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.phone) {
+      toast.error("Please fill in your name and phone number");
+      return;
+    }
+    toast.success("Spa reservation submitted! Redirecting to WhatsApp...");
+    const msg = `Hi White Rock Spa, I'd like to book a treatment:\nName: ${formData.firstName} ${formData.lastName}\nPhone: ${formData.phone}\nGuests: ${formData.totalGuests}\nDate: ${formData.treatmentDate}\nTime: ${formData.treatmentTime}\nTreatment: ${formData.treatmentChoice || "General Inquiry"}\nNotes: ${formData.orderNotes}`;
+    window.open(`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  // Create an extended array for infinite visual buffer (3x duplication)
+  const EXTENDED_SLIDES = [...SPA_SLIDES, ...SPA_SLIDES, ...SPA_SLIDES];
 
   return (
-    <div>
+    <div className="bg-[hsl(222_47%_9%)] min-h-screen text-slate-100">
+      {/* 1:1 Page Hero for Spa & Wellness */}
       <PageHero
-        eyebrow={{ id: "Wellness & Relaxation", en: "Wellness & Relaxation", ru: "Велнес и релакс", ko: "웰니스 & 휴식" }}
-        title={{ id: "Spa & Wellness", en: "Spa & Wellness", ru: "СПА и велнес", ko: "스파 & 웰니스" }}
-        subtitle={{
-          id: "Escapes ke sanctuary spa kelas dunia kami — treatment premium, fasilitas modern, dan terapis ahli yang dedikasi untuk perjalanan wellness kamu.",
-          en: "Escape to our world-class spa sanctuary featuring premium treatments, state-of-the-art facilities, and expert therapists dedicated to your wellness journey.",
-          ru: "Откройте для себя наш спа-санктуарий мирового класса с премиальными процедурами, современными удобствами и опытными терапевтами, посвятившими себя вашему пути к велнесу.",
-          ko: "프리미엄 트리트먼트, 최첨단 시설, 그리고 여러분의 웰니스 여정을 위해 헌신하는 전문 테라피스트가 있는 세계적 수준의 스파 산책처로 빠져보세요.",
-        }}
-      />
+        bgImage="/assets/whiterock/spa-1.jpg"
+        eyebrow="WELLNESS & REJUVENATION"
+        title="WHITE ROCK SPA & WELLNESS"
+        subtitle="Perched gracefully at the cliff's edge with sweeping views over the magnificent expanse of Melasti Beach, White Rock Spa & Wellness provides an exquisite sanctuary for deep rejuvenation. Let the ocean's gentle cadence soothe your senses as you embark on an unparalleled journey toward absolute tranquility, transformative beauty, and perfect mind-body harmony."
+        height="tall"
+      >
+        <div className="flex flex-wrap items-center justify-center gap-3.5 mt-6">
+          <a href="#spareservation">
+            <Button
+              variant="luxury"
+              size="md"
+              className="rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-lg hover:scale-105 transition-all duration-300"
+            >
+              <Calendar className="h-4 w-4 mr-2" /> BOOK YOUR TREATMENT
+            </Button>
+          </a>
+          <a
+            href="https://whiterockbali.com/spamenu/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button
+              variant="hero"
+              size="md"
+              className="rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider border-amber-400/30 text-amber-300 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300"
+            >
+              <Sparkles className="h-4 w-4 mr-2" /> SPA MENUS <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-70" />
+            </Button>
+          </a>
+        </div>
+      </PageHero>
 
-      <section className="py-16 px-5 md:px-8">
-        <div className="container mx-auto">
-          <Reveal>
-            <div className="text-center mb-12">
-              <h2 className="font-cinzel text-3xl md:text-4xl font-bold text-white text-glow-gold">{tf({ id: "Signature Treatments", en: "Signature Treatments", ru: "Фирменные процедуры", ko: "시그니처 트리트먼트" })}</h2>
-              <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
-                {tf({ id: "Nikmati pilihan treatment terapi kurasi kami yang dirancang untuk memulihkan, meremajakan, dan menghidupkan kembali tubuh & pikiran.", en: "Indulge in our carefully curated selection of therapeutic treatments designed to restore, rejuvenate, and revitalize your body and mind.", ru: "Насладитесь нашей тщательно подобранной подборкой терапевтических процедур, созданных, чтобы восстановить, обновить и оживить ваше тело и разум.", ko: "신체와 마음을 회복하고 재생하며 활력을 되찾도록 설계된 엄선된 테라피 트리트먼트를 즐겨보세요." })}
-              </p>
+      {/* 1:1 Infinite Carousel Photo Slider */}
+      <section
+        className="py-12 px-0 bg-slate-950 relative overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        <div className="relative max-w-[1400px] mx-auto px-4">
+          {/* Carousel Arrows */}
+          <button
+            onClick={prevSlide}
+            aria-label="Previous slide"
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none"
+          >
+            <ChevronLeft className="h-6 w-6 stroke-[3]" />
+          </button>
+
+          <button
+            onClick={nextSlide}
+            aria-label="Next slide"
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 focus:outline-none"
+          >
+            <ChevronRight className="h-6 w-6 stroke-[3]" />
+          </button>
+
+          {/* Slider Content Track with Infinite Extended Buffer */}
+          <div className="overflow-hidden rounded-2xl">
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{
+                transform: `translateX(-${currentSlide * (100 / (window.innerWidth >= 1024 ? 3.2 : 1.1))}%)`,
+              }}
+            >
+              {EXTENDED_SLIDES.map((slide, idx) => (
+                <div
+                  key={`${slide.id}-${idx}`}
+                  className="w-full lg:w-1/3 shrink-0 px-2.5"
+                >
+                  <div className="relative h-72 md:h-80 rounded-2xl overflow-hidden group shadow-lg border border-white/10">
+                    <img
+                      src={slide.src}
+                      alt={slide.alt}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out will-change-transform transform-gpu"
+                      style={{ backfaceVisibility: "hidden" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-30 transition-opacity" />
+                  </div>
+                </div>
+              ))}
             </div>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {treatments.map((t, i) => (
-              <Reveal key={i} delay={i * 60}>
-                <Card className="glow-card glass rounded-2xl h-full hover:border-amber-300/40 transition-all">
-                  <CardHeader>
-                    <div className="flex justify-between items-start gap-3 mb-2">
-                      <CardTitle className="text-lg text-white">{tf({ id: t.nameId, en: t.name })}</CardTitle>
-                      <Badge variant="secondary" className="gold-gradient text-[hsl(222_47%_8%)] shrink-0">{t.price}</Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-amber-300">
-                      <Clock className="h-4 w-4" /> {t.duration}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-slate-400 text-sm">{tf({ id: t.descId, en: t.desc })}</p>
-                  </CardContent>
-                </Card>
-              </Reveal>
-            ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-5 md:px-8 bg-white/[0.02]">
-        <div className="container mx-auto">
-          <Reveal>
-            <div className="text-center mb-12">
-              <h2 className="font-cinzel text-3xl md:text-4xl font-bold text-white text-glow-gold">{tf({ id: "Premium Facilities", en: "Premium Facilities", ru: "Премиальные удобства", ko: "프리미엄 시설" })}</h2>
-              <p className="text-slate-400 mt-3 max-w-2xl mx-auto">
-                {tf({ id: "Tenggelam dalam amenities mewah kami yang dirancang untuk meningkatkan pengalaman wellness dan relaksasi total.", en: "Immerse yourself in our luxurious amenities designed to enhance your wellness experience and promote complete relaxation.", ru: "Погрузитесь в наши роскошные удобства, созданные для повышения качества велнес-опыта и полного расслабления.", ko: "완전한 휴식과 웰니스 경험을 높이도록 설계된 호화로운 편의 시설 속에 빠져보세요." })}
+      {/* 1:1 BOOK Your Treatment Form Section */}
+      <section className="py-20 px-5 md:px-8 bg-slate-900/40 border-t border-white/10" id="spareservation">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="font-cinzel text-4xl md:text-5xl tracking-wide">
+              <span className="font-bold text-white">BOOK </span>
+              <span className="italic font-normal text-amber-300 font-serif">Your Treatment</span>
+            </h2>
+            <p className="text-slate-400 text-xs uppercase tracking-[0.25em] mt-3">
+              DAILY 11:00 AM – 20:00 PM • CLIFFSIDE MELASTI BEACH SANCTUARY
+            </p>
+          </div>
+
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            {/* Row 1: Name */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  First Name <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter first name"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Last Name <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter last name"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Contact & Guests */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Email <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="email@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Nationality <span className="text-rose-400">*</span>
+                </label>
+                <select
+                  value={formData.nationality}
+                  onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                >
+                  <option value="Indonesia">Indonesia</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Singapore">Singapore</option>
+                  <option value="United States">United States</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Other">Other International</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Phone / WhatsApp <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+62 812-xxxx-xxxx"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Date, Time & Treatment */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Total Guest <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.totalGuests}
+                  onChange={(e) => setFormData({ ...formData, totalGuests: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Treatment Date <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.treatmentDate}
+                  onChange={(e) => setFormData({ ...formData, treatmentDate: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Treatment Time <span className="text-rose-400">*</span>
+                </label>
+                <select
+                  value={formData.treatmentTime}
+                  onChange={(e) => setFormData({ ...formData, treatmentTime: e.target.value })}
+                  className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+                >
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="13:00">13:00 PM</option>
+                  <option value="14:00">14:00 PM</option>
+                  <option value="15:00">15:00 PM</option>
+                  <option value="16:00">16:00 PM</option>
+                  <option value="17:00">17:00 PM</option>
+                  <option value="18:00">18:00 PM</option>
+                  <option value="19:00">19:00 PM</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 4: Treatment Choice */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                What is your treatment choice?
+              </label>
+              <select
+                value={formData.treatmentChoice}
+                onChange={(e) => setFormData({ ...formData, treatmentChoice: e.target.value })}
+                className="w-full bg-slate-950/80 border-b border-white/20 focus:border-amber-400 text-white px-4 py-3 text-sm focus:outline-none transition-colors"
+              >
+                <option value="">-- Select Treatment --</option>
+                {SPA_TREATMENTS.map((t, idx) => (
+                  <option key={idx} value={t.name.en}>
+                    {t.name.en} ({t.duration})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Row 5: Total Price & Order Notes */}
+            <div className="pt-4 space-y-4">
+              <div>
+                <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Total Treatment Price</div>
+                <div className="text-xl font-bold font-cinzel text-amber-300">IDR0.00</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Order Notes
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Special requests or health considerations..."
+                  value={formData.orderNotes}
+                  onChange={(e) => setFormData({ ...formData, orderNotes: e.target.value })}
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-lg focus:border-amber-400 text-white p-3 text-sm focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Submit Bar with 1:1 Blue Submit Button & Consent Disclaimer */}
+            <div className="pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <button
+                type="submit"
+                className="bg-[#2f80ed] hover:bg-[#1a66cc] text-white font-semibold text-sm px-8 py-3 rounded-md shadow-lg transition-colors duration-200 shrink-0"
+              >
+                Submit
+              </button>
+
+              <p className="text-[11px] text-slate-400 leading-relaxed max-w-xl">
+                By submitting this form, you consent to share your personal information with us to service your request and for communication purposes. We do not sell your data to third parties.
               </p>
             </div>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {facilities.map((f, i) => {
-              const Icon = f.icon;
-              return (
-                <Reveal key={i} delay={i * 60}>
-                  <Card className="glow-card glass rounded-2xl text-center h-full hover:border-amber-300/40 transition-all">
-                    <CardHeader>
-                      <div className="mx-auto w-12 h-12 rounded-full gold-gradient flex items-center justify-center mb-4">
-                        <Icon className="h-6 w-6 text-[hsl(222_47%_8%)]" />
-                      </div>
-                      <CardTitle className="text-lg text-white">{tf({ id: f.nameId, en: f.name })}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-slate-400 text-sm">{tf({ id: f.descId, en: f.desc })}</p>
-                    </CardContent>
-                  </Card>
-                </Reveal>
-              );
-            })}
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Reveal>
-              <Card className="glass rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <Clock className="h-5 w-5 text-amber-300" /> {tf({ id: "Jam Operasional", en: "Operating Hours", ru: "Часы работы", ko: "운영 시간" })}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-slate-300">
-                  <div className="flex justify-between"><span>{tf({ id: "Senin - Jumat", en: "Monday - Friday", ru: "Понедельник — пятница", ko: "월요일 - 금요일" })}</span><span className="font-medium text-white">6:00 AM - 10:00 PM</span></div>
-                  <div className="flex justify-between"><span>{tf({ id: "Sabtu - Minggu", en: "Saturday - Sunday", ru: "Суббота — воскресенье", ko: "토요일 - 일요일" })}</span><span className="font-medium text-white">7:00 AM - 11:00 PM</span></div>
-                  <div className="pt-3 border-t border-white/10">
-                    <p className="text-sm text-slate-400">{tf({ id: "Booking treatment terakhir diterima 90 menit sebelum tutup.", en: "Last treatment bookings accepted 90 minutes before closing.", ru: "Последнее бронирование процедур принимается за 90 минут до закрытия.", ko: "마지막 트리트먼트 예약은 폐장 90분 전까지 받습니다." })}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Reveal>
-            <Reveal delay={100}>
-              <Card className="glass rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-white">{tf({ id: "Kebijakan Spa", en: "Spa Policies", ru: "Правила спа", ko: "스파 규정" })}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-slate-400">
-                    <li>• {tf({ id: "Datang 15 menit lebih awal untuk janji temu", en: "Arrive 15 minutes early for your appointment", ru: "Приходите за 15 минут до записи", ko: "예약 시간 15분 전에 도착하세요" })}</li>
-                    <li>• {tf({ id: "Berlaku kebijakan pembatalan 24 jam", en: "24-hour cancellation policy applies", ru: "Действует политика отмены за 24 часа", ko: "24시간 취소 정책 적용" })}</li>
-                    <li>• {tf({ id: "Jubah & sandal gratis disediakan", en: "Complimentary robes and slippers provided", ru: "Халаты и тапочки предоставляются бесплатно", ko: "로브와 슬리퍼 무료 제공" })}</li>
-                    <li>• {tf({ id: "Hp dimatikan di area spa", en: "Mobile phones must be silenced in spa areas", ru: "Мобильные телефоны должны быть на беззвучном в зоне спа", ko: "스파 구역에서는 휴대폰을 무음으로 해주세요" })}</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </Reveal>
-          </div>
-
-          <Reveal>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="luxury" size="lg" onClick={() => navigate("/booking")} className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> {tf({ id: "Booking Treatment", en: "Book Treatment", ru: "Забронировать процедуру", ko: "트리트먼트 예약" })}
-              </Button>
-              <a href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
-                <Button variant="outline" size="lg" className="flex items-center gap-2 border-amber-300/40 text-amber-200">
-                  <Phone className="h-4 w-4" /> {tf({ id: "Hubungi Spa", en: "Call Spa", ru: "Позвонить в спа", ko: "스파 전화" })}
-                </Button>
-              </a>
-            </div>
-          </Reveal>
+          </form>
         </div>
       </section>
     </div>
   );
-};
-
-export default Treatments;
+}

@@ -17,6 +17,8 @@ import DaybedsSuites from "./pages/DaybedsSuites";
 import Dining from "./pages/Dining";
 import Experiences from "./pages/Experiences";
 import WeddingsMice from "./pages/WeddingsMice";
+import Mice from "./pages/Mice";
+import Wedding from "./pages/Wedding";
 import Events from "./pages/Events";
 import Merch from "./pages/Merch";
 import LiveWeather from "./pages/LiveWeather";
@@ -25,12 +27,16 @@ import NYE from "./pages/NYE";
 import Faq from "./pages/Faq";
 import Careers from "./pages/Careers";
 import SpaWellness from "./pages/SpaWellness";
-import FitnessCenter from "./pages/FitnessCenter";
-import ValetParking from "./pages/ValetParking";
 import Booking from "./pages/Booking";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import MyBookings from "./pages/MyBookings";
 import StaffCheckIn from "./pages/StaffCheckIn";
+import Entertainment from "./pages/Entertainment";
+import SpecialOffers from "./pages/SpecialOffers";
+import Partnerships from "./pages/Partnerships";
+import PastEvents from "./pages/PastEvents";
+import BaliGuide from "./pages/BaliGuide";
+import MediaCoverage from "./pages/MediaCoverage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,10 +51,6 @@ const FloatingConcierge = ({ onOpen }: { onOpen: () => void }) => {
         onClick={onOpen}
         className="rounded-full shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-3 px-6 py-4 gold-gradient text-[hsl(222_47%_8%)] font-bold border border-amber-300/40"
       >
-        <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75" />
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-200" />
-        </span>
         <MessageCircle className="h-5 w-5" />
         <span className="font-semibold tracking-wide text-xs sm:text-sm">
           {tf({ id: "Ngobrol sama Sarah", en: "Talk to Sarah", ru: "Поговорить с Сарой", ko: "사라와 대화하기" })}
@@ -84,18 +86,28 @@ const GlobalLayout = () => {
   }, [location.pathname, location.hash]);
 
   return (
-    <div className="min-h-screen bg-[hsl(222_47%_6%)]">
+    <div className="min-h-screen bg-[hsl(222_47%_9%)] relative">
+      {/* Global Luxury Film Grain Noise Overlay (3.5% Opacity) */}
+      <div
+        className="fixed inset-0 pointer-events-none z-30 opacity-[0.035] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }}
+      />
       <Navbar />
 
       <main>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/daybeds-suites" element={<DaybedsSuites />} />
+          <Route path="/daybeds-suites" element={<Index />} />
           <Route path="/dining" element={<Dining />} />
+          <Route path="/menu" element={<Dining />} />
           <Route path="/experiences" element={<Experiences />} />
           <Route path="/spa-wellness" element={<SpaWellness />} />
-          <Route path="/fitness-center" element={<FitnessCenter />} />
           <Route path="/weddings-mice" element={<WeddingsMice />} />
+          <Route path="/mice-wedding" element={<WeddingsMice />} />
+          <Route path="/mice" element={<Mice />} />
+          <Route path="/wedding" element={<Wedding />} />
           <Route path="/events" element={<Events />} />
           <Route path="/merch" element={<Merch />} />
           <Route path="/live-weather" element={<LiveWeather />} />
@@ -103,7 +115,12 @@ const GlobalLayout = () => {
           <Route path="/nye" element={<NYE />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/careers" element={<Careers />} />
-          <Route path="/valet-parking" element={<ValetParking />} />
+          <Route path="/entertainment" element={<Entertainment />} />
+          <Route path="/special-offers" element={<SpecialOffers />} />
+          <Route path="/partnerships" element={<Partnerships />} />
+          <Route path="/past-events" element={<PastEvents />} />
+          <Route path="/bali-guide" element={<BaliGuide />} />
+          <Route path="/media-coverage" element={<MediaCoverage />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/bookingconfirmation" element={<BookingConfirmation />} />
           <Route path="/my-bookings" element={<MyBookings />} />

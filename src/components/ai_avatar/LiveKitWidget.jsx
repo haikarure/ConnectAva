@@ -81,7 +81,7 @@ const LiveKitWidget = ({ setShowSupport }) => {
           </div>
         ) : token ? (
           <LiveKitRoom
-            serverUrl={import.meta.env.VITE_LIVEKIT_URL}
+            serverUrl={import.meta.env.VITE_LIVEKIT_URL || "wss://receptionist-lwypqvqa.livekit.cloud"}
             token={token}
             connect={true}
             video={false}
