@@ -13,6 +13,11 @@ async def open_browser(url: str, context: RunContext) -> str:
     Args:
         url: Path atau URL halaman yang ingin dibuka (contoh: '/fitness-center', '/spa-wellness', '/booking', '/valet-parking').
     """
+    # GUARDRAIL: Strict URL Sanitization & SSRF/External Domain Prevention
+    if not isinstance(url, str) or not (url.startswith("/") or url.startswith("#")):
+        logger.warning(f"[guardrail] Blocked untrusted URL navigation attempt: '{url}' -> fallback to '/'")
+        url = "/"
+
     print(f"[tools] open_browser function tool invoked with url={url}", flush=True)
     logger.info(f"[tools] open_browser function tool invoked with url={url}")
     try:
