@@ -52,8 +52,8 @@ async def trigger_web3_booking(daybed_type: str, visit_date: str, context: RunCo
     """
     logger.info(f"[tools] trigger_web3_booking invoked with daybed_type={daybed_type}, visit_date={visit_date}")
     try:
-        room = None
-        if context and context.session:
+        room = getattr(context, "room", None)
+        if not room and context and context.session:
             if hasattr(context.session, "room_io"):
                 room = context.session.room_io.room
             elif hasattr(context.session, "room"):
