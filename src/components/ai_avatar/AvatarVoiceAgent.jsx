@@ -22,120 +22,109 @@ const AvatarVoiceAgent = ({ onDisconnect }) => {
   const localParticipant = useLocalParticipant();
   const [pendingBooking, setPendingBooking] = useState(null);
 
-  // Listen to LiveKit navigation data packets from backend agent tool (open_browser)
-  useEffect(() => {
-    if (!room) return;
-    const handleDataReceived = (payload, participant, kind, topic) => {
-      try {
-        const decoded = new TextDecoder().decode(payload);
-        const data = JSON.parse(decoded);
-        console.log("[ai-avatar] Received room data packet:", data, "topic:", topic);
-        if (data && data.action === "disconnect") {
-          console.log("[ai-avatar] Disconnect action received from agent, scheduling room disconnect in 3.5s...");
-          setTimeout(() => {
-            if (room) room.disconnect();
-          }, 3500);
-          return;
-        }
-        if (data && data.action === "trigger_web3_booking") {
-          console.log("[ai-avatar] Web3 booking modal triggered by Sarah:", data);
-          setPendingBooking({
-            daybedType: data.daybedType ?? 0,
-            daybedName: data.daybedName || "Lagoon Bed",
-            visitDate: data.visitDate || new Date().toISOString().split("T")[0],
-            autoSign: !!data.autoSign,
-          });
-          return;
-        }
-        if (data && data.action === "auto_sign") {
-          console.log("[ai-avatar] Voice auto-sign command received!");
-          setPendingBooking((prev) => (prev ? { ...prev, autoSign: true } : { daybedType: 0, daybedName: "Lagoon Bed", visitDate: new Date().toISOString().split("T")[0], autoSign: true }));
-          return;
-        }
-        if (data && (data.action === "navigate" || data.url)) {
-          let path = data.url;
-          if (path.startsWith("http://") || path.startsWith("https://")) {
-            const parsed = new URL(path);
-            path = parsed.pathname + parsed.search;
-          }
-          const rawPath = path.split("?")[0];
-          const queryStr = path.includes("?") ? "?" + path.split("?").slice(1).join("?") : "";
-          const lowerPath = rawPath.toLowerCase();
-          const ROUTE_ALIASES = {
-            "/room-types": "/#daybeds",
-            "/rooms": "/#daybeds",
-            "/room": "/#daybeds",
-            "/pricing": "/#daybeds",
-            "/price": "/#daybeds",
-            "/harga": "/#daybeds",
-            "/kamar": "/#daybeds",
-            "/daybed": "/#daybeds",
-            "/daybeds": "/#daybeds",
-            "/daybed-suites": "/#daybeds",
-            "/daybeds-suites": "/#daybeds",
-            "/suites": "/#daybeds",
-            "/suite": "/#daybeds",
-            "/spa": "/spa-wellness",
-            "/wellness": "/spa-wellness",
-            "/home": "/",
-            "/confirmation": "/bookingconfirmation",
-            "/confirm": "/bookingconfirmation",
-          };
-          if (ROUTE_ALIASES[lowerPath]) {
-            path = ROUTE_ALIASES[lowerPath] + queryStr;
-          }
-
-          console.log("[ai-avatar] Navigating React router to:", path);
-          if (path.includes("#")) {
-            const [pathname, hash] = path.split("#");
-            const targetPath = pathname || "/";
-            console.log("[ai-avatar] Navigating React router to page:", targetPath, "section hash:", hash);
-            navigate(targetPath + queryStr);
-            setTimeout(() => {
-              const element = document.getElementById(hash);
-              if (element) {
-                console.log("[ai-avatar] Smooth scrolling to exact section id:", hash);
-                element.scrollIntoView({ behavior: "smooth", block: "start" });
-              } else {
-                const navBtn = Array.from(document.querySelectorAll('button, a')).find(
-                  (b) => b.id === `nav-btn-${hash}` || (b.textContent && b.textContent.toLowerCase().includes(hash))
-                );
-                if (navBtn) {
-                  console.log("[ai-avatar] Clicking section link button:", navBtn);
-                  navBtn.click();
-                }
-              }
-            }, 300);
-          } else {
-            navigate(path);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }
-        }
-      } catch (err) {
-        console.error("[ai-avatar] Error processing navigation data packet:", err);
-      }
-    };
-
-    room.on(RoomEvent.DataReceived, handleDataReceived);
-    return () => {
-      room.off(RoomEvent.DataReceived, handleDataReceived);
-    };
-  }, [room, navigate]);
-
-  useDataChannel("navigation", (data) => {
+  const handleDataReceived = useCallback((payload, participant, kind, topic) => {
     try {
-      const decoded = new TextDecoder().decode(data.payload);
-      const payload = JSON.parse(decoded);
-      if (payload && payload.url) {
-        let path = payload.url;
+      const decoded = typeof payload === "string" ? payload : new TextDecoder().decode(payload);
+      const data = JSON.parse(decoded);
+      console.log("[ai-avatar] Received room data packet:", data, "topic:", topic);
+      if (data && data.action === "disconnect") {
+        console.log("[ai-avatar] Disconnect action received from agent, scheduling room disconnect in 3.5s...");
+        setTimeout(() => {
+          if (room) room.disconnect();
+        }, 3500);
+        return;
+      }
+      if (data && data.action === "trigger_web3_booking") {
+        console.log("[ai-avatar] Web3 booking modal triggered by Sarah:", data);
+        setPendingBooking({
+          daybedType: data.daybedType ?? 0,
+          daybedName: data.daybedName || "Lagoon Bed",
+          visitDate: data.visitDate || new Date().toISOString().split("T")[0],
+          autoSign: !!data.autoSign,
+        });
+        return;
+      }
+      if (data && data.action === "auto_sign") {
+        console.log("[ai-avatar] Voice auto-sign command received!");
+        setPendingBooking((prev) => (prev ? { ...prev, autoSign: true } : { daybedType: 0, daybedName: "Lagoon Bed", visitDate: new Date().toISOString().split("T")[0], autoSign: true }));
+        return;
+      }
+      if (data && (data.action === "navigate" || data.url)) {
+        let path = data.url;
         if (path.startsWith("http://") || path.startsWith("https://")) {
           const parsed = new URL(path);
           path = parsed.pathname + parsed.search;
         }
-        navigate(path);
+        const rawPath = path.split("?")[0];
+        const queryStr = path.includes("?") ? "?" + path.split("?").slice(1).join("?") : "";
+        const lowerPath = rawPath.toLowerCase();
+        const ROUTE_ALIASES = {
+          "/room-types": "/#daybeds",
+          "/rooms": "/#daybeds",
+          "/room": "/#daybeds",
+          "/pricing": "/#daybeds",
+          "/price": "/#daybeds",
+          "/harga": "/#daybeds",
+          "/kamar": "/#daybeds",
+          "/daybed": "/#daybeds",
+          "/daybeds": "/#daybeds",
+          "/daybed-suites": "/#daybeds",
+          "/daybeds-suites": "/#daybeds",
+          "/suites": "/#daybeds",
+          "/suite": "/#daybeds",
+          "/spa": "/spa-wellness",
+          "/wellness": "/spa-wellness",
+          "/home": "/",
+          "/confirmation": "/bookingconfirmation",
+          "/confirm": "/bookingconfirmation",
+        };
+        if (ROUTE_ALIASES[lowerPath]) {
+          path = ROUTE_ALIASES[lowerPath] + queryStr;
+        }
+
+        console.log("[ai-avatar] Navigating React router to:", path);
+        if (path.includes("#")) {
+          const [pathname, hash] = path.split("#");
+          const targetPath = pathname || "/";
+          console.log("[ai-avatar] Navigating React router to page:", targetPath, "section hash:", hash);
+          navigate(targetPath + queryStr);
+          setTimeout(() => {
+            const element = document.getElementById(hash);
+            if (element) {
+              console.log("[ai-avatar] Smooth scrolling to exact section id:", hash);
+              element.scrollIntoView({ behavior: "smooth", block: "start" });
+            } else {
+              const navBtn = Array.from(document.querySelectorAll('button, a')).find(
+                (b) => b.id === `nav-btn-${hash}` || (b.textContent && b.textContent.toLowerCase().includes(hash))
+              );
+              if (navBtn) {
+                console.log("[ai-avatar] Clicking section link button:", navBtn);
+                navBtn.click();
+              }
+            }
+          }, 300);
+        } else {
+          navigate(path);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
       }
-    } catch (e) {
-      console.error("[ai-avatar] Error in useDataChannel navigation:", e);
+    } catch (err) {
+      console.error("[ai-avatar] Error processing navigation data packet:", err);
+    }
+  }, [room, navigate]);
+
+  // Listen to LiveKit navigation data packets from backend agent tool (open_browser)
+  useEffect(() => {
+    if (!room) return;
+    room.on(RoomEvent.DataReceived, handleDataReceived);
+    return () => {
+      room.off(RoomEvent.DataReceived, handleDataReceived);
+    };
+  }, [room, handleDataReceived]);
+
+  useDataChannel("navigation", (data) => {
+    if (data && data.payload) {
+      handleDataReceived(data.payload, null, null, "navigation");
     }
   });
 
